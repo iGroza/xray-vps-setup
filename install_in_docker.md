@@ -39,13 +39,13 @@ sudo systemctl restart ssh
 ```
 
 ### Настройки iptables
-Нам нужно оставить открытыми порты для SSH, 80(HTTP) и 443(HTTPS).
+Нам нужно оставить открытыми порты для SSH, 80(HTTP) и 433(HTTPS).
 Для этого нужно выполнить следующие команды:
 ```bash
 iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT 
 iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
-iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+iptables -A INPUT -p tcp -m tcp --dport 433 -j ACCEPT
 iptables -A INPUT -i lo -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
 iptables -P INPUT DROP
@@ -232,7 +232,7 @@ wget -qO- https://raw.githubusercontent.com/Jolymmiles/confluence-marzban-home/m
     {
       "tag": "VLESS TCP VISION REALITY",
       "listen": "0.0.0.0",
-      "port": 443,
+      "port": 433,
       "protocol": "vless",
       "settings": {
         "clients": [
@@ -248,7 +248,7 @@ wget -qO- https://raw.githubusercontent.com/Jolymmiles/confluence-marzban-home/m
         "network": "tcp",
         "security": "reality",
         "realitySettings": {
-          "xver": 1,
+          "xver": 0,
           "dest": "127.0.0.1:4123",
           "serverNames": [
             "VLESS_DOMAIN" // ПОМЕНЯТЬ НА СВОЕ

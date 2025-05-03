@@ -2,3 +2,4 @@ gist*.md
 ansible.cfg
 inventory.yml
 playbook.yml
+.DS_Store

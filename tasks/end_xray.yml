@@ -1,6 +1,6 @@
 - name: Print clipboard string
   debug:
-    msg: "vless://{{ xray_uuid.stdout }}@{{ vless.domain }}:443?type=tcp&security=reality&pbk={{ x25519_pbk.stdout }}&fp=chrome&sni={{ vless.domain }}&sid={{ short_id.stdout }}&spx=%2F&flow=xtls-rprx-vision"
+    msg: "vless://{{ xray_uuid.stdout }}@{{ vless.domain }}:433?type=tcp&security=reality&pbk={{ x25519_pbk.stdout }}&fp=chrome&sni={{ vless.domain }}&sid={{ short_id.stdout }}&spx=%2F&flow=xtls-rprx-vision"
 - name: XRay outbound config 
   debug:
     msg: |
@@ -11,7 +11,7 @@
               "vnext": [
                 {
                   "address": "{{ vless.domain }}",
-                  "port": 443,
+                  "port": 433,
                   "users": [
                     {
                       "id": "{{ xray_uuid.stdout }}",
@@ -40,7 +40,7 @@
           {
               "type": "vless",
               "server": "{{ vless.domain }}",
-              "server_port": 443,
+              "server_port": 433,
               "uuid": "{{ xray_uuid.stdout }}",
               "flow": "xtls-rprx-vision",
               "tls": {

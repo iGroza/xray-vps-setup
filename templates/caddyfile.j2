@@ -1,15 +1,15 @@
 {
-  https_port 4123
-  default_bind 127.0.0.1
-  servers {
-    listener_wrappers {
-      proxy_protocol {
-        allow 127.0.0.1/32
-      }
-      tls
-    }
-  }
-  auto_https disable_redirects
+        https_port 4123
+        default_bind 127.0.0.1
+        servers {
+                listener_wrappers {
+                        proxy_protocol {
+                                allow 127.0.0.1/32
+                        }
+                        tls
+                }
+        }
+        auto_https disable_redirects
 }
 https://{{ domain }} {
 {% if setup_variant == "marzban" %}
@@ -19,9 +19,9 @@ https://{{ domain }} {
   file_server
 {% endif %}
 }
-http://{{ domain }} {
+http://{{ domain }}:433 {
   bind 0.0.0.0
-  redir https://{host}{uri} permanent
+  redir https://{host}:433{uri} permanent
 }
 :4123 {
         tls internal

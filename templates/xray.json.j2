@@ -1,44 +1,47 @@
 {
   "log": {
-    "loglevel": "info"
+    "loglevel": "none"
   },
   "inbounds": [
     {
       "tag": "VLESS TCP VISION REALITY",
       "listen": "0.0.0.0",
-      "port": 443,
+      "port": 433,
       "protocol": "vless",
       "settings": {
         "clients": [
-        {
-          "id": "{{ xray_uuid.stdout}}",
-          "email": "default",
-          "flow": "xtls-rprx-vision"
-        }],
-        "decryption": "none"
+          {
+            "id": "$XRAY_UUID",
+            "flow": "xtls-rprx-vision"
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+          {
+            "dest": "127.0.0.1:4123",
+            "xver": 0
+          }
+        ]
       },
       "streamSettings": {
         "network": "tcp",
         "security": "reality",
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+          }
+        },
         "realitySettings": {
-          "xver": 1,
+          "xver": 0,
           "dest": "127.0.0.1:4123",
           "serverNames": [
-            "{{ domain }}"
+            "$VLESS_DOMAIN"
           ],
-          "privateKey": "{{ x25519_pik.stdout }}",
+          "privateKey": "$XRAY_PIK",
           "shortIds": [
-            "{{ short_id.stdout }}"
+            "$XRAY_SID"
           ]
         }
-      },
-      "sniffing": {
-        "enabled": true,
-        "destOverride": [
-          "http",
-          "tls"
-        ],
-        "routeOnly": true
       }
     }
   ],

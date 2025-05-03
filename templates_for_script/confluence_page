@@ -1,272 +1,259 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход в Confluence</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f4f5f7;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Вход в Confluence</title>
+  <style>
+    :root {
+      --primary: #0052cc;
+      --primary-dark: #0747a6;
+      --bg: #f4f5f7;
+      --fg: #172b4d;
+      --light: #fff;
+      --border: #dfe1e6;
+      --error: #de350b;
+      --radius: 6px;
+      --shadow: 0 2px 4px rgba(9,30,66,0.25);
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
 
-        .login-container {
-            background-color: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-            width: 350px;
-            text-align: center;
-        }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
 
-        .logo {
-            margin-bottom: 20px;
-        }
+    .login-card {
+      background: var(--light);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 360px;
+      padding: 32px;
+      text-align: center;
+    }
 
-        .logo img {
-            width: 120px;
-        }
+    .login-card .logo {
+      margin-bottom: 24px;
+    }
+    .login-card .logo img {
+      width: 128px;
+    }
 
-        h2 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #0052cc;
-        }
+    h1 {
+      margin: 0 0 24px;
+      font-size: 22px;
+      color: var(--primary);
+    }
 
-        input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #dfe1e6;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
+    form {
+      display: grid;
+      gap: 16px;
+    }
 
-        .error {
-            border-color: red;
-        }
+    input {
+      padding: 12px;
+      font-size: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: border-color .2s, box-shadow .2s;
+      width: 100%;
+    }
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0,82,204,0.2);
+      outline: none;
+    }
+    input.error {
+      border-color: var(--error);
+    }
 
-        .error-message {
-            color: red;
-            font-size: 14px;
-            display: none;
-            margin-top: 10px;
-        }
+    .error-message {
+      color: var(--error);
+      font-size: 13px;
+      text-align: left;
+      display: none;
+    }
 
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #0052cc;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
-        }
+    button {
+      padding: 12px;
+      font-size: 15px;
+      background: var(--primary);
+      color: var(--light);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background .2s;
+    }
+    button:hover {
+      background: var(--primary-dark);
+    }
 
-        button:hover {
-            background-color: #0747a6;
-        }
+    .links {
+      margin-top: 16px;
+      font-size: 13px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+    .links a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: text-decoration .2s;
+    }
+    .links a:hover {
+      text-decoration: underline;
+    }
 
-        .help-links {
-            margin-top: 20px;
-            font-size: 14px;
-        }
-
-        .help-links a {
-            color: #0052cc;
-            text-decoration: none;
-        }
-
-        .help-links a:hover {
-            text-decoration: underline;
-        }
-         /* Стили для модального окна */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-            padding-top: 60px;
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 400px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-    </style>
+    /* Модальное окно */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(9,30,66,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal.open { display: flex; }
+    .modal-content {
+      background: var(--light);
+      padding: 24px;
+      border-radius: var(--radius);
+      max-width: 400px;
+      width: 100%;
+      box-shadow: var(--shadow);
+      text-align: center;
+      position: relative;
+    }
+    .modal-content .close {
+      position: absolute;
+      top: 12px; right: 12px;
+      font-size: 20px;
+      color: var(--border);
+      cursor: pointer;
+      transition: color .2s;
+    }
+    .modal-content .close:hover {
+      color: var(--fg);
+    }
+    .modal-content p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--fg);
+    }
+  </style>
 </head>
 <body>
 
-<div class="login-container">
+  <div class="login-card">
     <div class="logo">
-        <img src="https://cdn.icon-icons.com/icons2/2429/PNG/512/confluence_logo_icon_147305.png" alt="Confluence">
+      <img src="https://cdn.icon-icons.com/icons2/2429/PNG/512/confluence_logo_icon_147305.png" alt="Confluence">
     </div>
-    <h2 id="login-title">Войти в Confluence</h2>
-    <form id="login-form">
-        <input type="text" id="username" name="username" placeholder="Адрес электронной почты">
-        <input type="password" id="password" name="password" placeholder="Введите пароль">
-        <button type="submit" id="login-button">Войти</button>
+    <h1 id="login-title">Войти в Confluence</h1>
+    <form id="login-form" novalidate>
+      <div>
+        <input type="text" id="username" name="username" placeholder="Адрес электронной почты" autocomplete="username">
+      </div>
+      <div>
+        <input type="password" id="password" name="password" placeholder="Введите пароль" autocomplete="current-password">
+      </div>
+      <div class="error-message" id="error-message">Неправильное имя пользователя или пароль.</div>
+      <button type="submit" id="login-button">Войти</button>
     </form>
-    <div id="error-message" class="error-message">Неправильное имя пользователя или пароль.</div>
-    <div class="help-links">
-        <a href="#" id="forgot-link">Не удается войти?</a> • <a href="#" id="create-link">Создать аккаунт</a>
+    <div class="links">
+      <a href="#" id="forgot-link">Не удается войти?</a>
+      |
+      <a href="#" id="create-link">Создать аккаунт</a>
     </div>
-</div>
+  </div>
 
-<div id="myModal" class="modal">
+  <!-- Модалка -->
+  <div class="modal" id="myModal">
     <div class="modal-content">
-        <span class="close">&times;</span>
-        <p id="modal-text">Для создания аккаунта обратитесь к администратору.</p>
+      <span class="close" id="modal-close">&times;</span>
+      <p id="modal-text">Для создания аккаунта обратитесь к администратору.</p>
     </div>
-</div>
+  </div>
 
-<script>
-    function setLanguage(lang) {
-        const elements = {
-            'ru': {
-                loginTitle: 'Войти в Confluence',
-                usernamePlaceholder: 'Адрес электронной почты',
-                passwordPlaceholder: 'Введите пароль',
-                loginButton: 'Войти',
-                forgotLink: 'Не удается войти?',
-                createLink: 'Создать аккаунт',
-                createAccountText: 'Для создания аккаунта обратитесь к администратору.',
-                forgotPasswordText: 'Для восстановления доступа обратитесь к администратору.',
-                errorMessage: 'Неправильное имя пользователя или пароль.'
-            },
-            'en': {
-                loginTitle: 'Login to Confluence',
-                usernamePlaceholder: 'Email address',
-                passwordPlaceholder: 'Enter password',
-                loginButton: 'Login',
-                forgotLink: 'Can\'t log in?',
-                createLink: 'Create an account',
-                createAccountText: 'To create an account, please contact your administrator.',
-                forgotPasswordText: 'To recover access, please contact your administrator.',
-                errorMessage: 'Incorrect username or password.'
-            }
-        };
-
-        document.getElementById('login-title').innerText = elements[lang].loginTitle;
-        document.getElementById('username').placeholder = elements[lang].usernamePlaceholder;
-        document.getElementById('password').placeholder = elements[lang].passwordPlaceholder;
-        document.getElementById('login-button').innerText = elements[lang].loginButton;
-        document.getElementById('forgot-link').innerText = elements[lang].forgotLink;
-        document.getElementById('create-link').innerText = elements[lang].createLink;
-
-        // Устанавливаем тексты для модальных окон и сообщений об ошибках
-        document.getElementById('create-link').dataset.modalText = elements[lang].createAccountText;
-        document.getElementById('forgot-link').dataset.modalText = elements[lang].forgotPasswordText;
-        document.getElementById('error-message').innerText = elements[lang].errorMessage;
-    }
-
-    function detectLanguage() {
-        const userLang = navigator.language || navigator.userLanguage;
-        if (userLang.startsWith('ru')) {
-            setLanguage('ru');
-        } else {
-            setLanguage('en');
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', detectLanguage);
-
-    var modal = document.getElementById("myModal");
-
-    var span = document.getElementsByClassName("close")[0];
-
-    function openModal(text) {
-        document.getElementById('modal-text').innerText = text;
-        modal.style.display = "block";
-    }
-
-    document.getElementById("create-link").onclick = function(event) {
-        event.preventDefault();
-        openModal(this.dataset.modalText);
-    }
-
-    document.getElementById("forgot-link").onclick = function(event) {
-        event.preventDefault();
-        openModal(this.dataset.modalText);
-    }
-
-    span.onclick = function() {
-        modal.style.display = "none";
-    }
-
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-
-    document.getElementById('login-form').onsubmit = function(event) {
-        event.preventDefault();
-        var username = document.getElementById('username');
-        var password = document.getElementById('password');
-        var errorMessage = document.getElementById('error-message');
-
-        username.classList.remove('error');
-        password.classList.remove('error');
-        errorMessage.style.display = 'none';
-
-        var hasError = false;
-        if (username.value.trim() === '') {
-            username.classList.add('error');
-            hasError = true;
-        }
-        if (password.value.trim() === '') {
-            password.classList.add('error');
-            hasError = true;
-        }
-
-        if (hasError) {
-            return;
-        }
-
-        errorMessage.style.display = 'block';
+  <script>
+    const texts = {
+      ru: {
+        loginTitle: 'Войти в Confluence',
+        usernamePlaceholder: 'Адрес электронной почты',
+        passwordPlaceholder: 'Введите пароль',
+        loginButton: 'Войти',
+        forgotLink: 'Не удается войти?',
+        createLink: 'Создать аккаунт',
+        createAccountText: 'Для создания аккаунта обратитесь к администратору.',
+        forgotPasswordText: 'Для восстановления доступа обратитесь к администратору.',
+        errorMessage: 'Неправильное имя пользователя или пароль.'
+      },
+      en: {
+        loginTitle: 'Login to Confluence',
+        usernamePlaceholder: 'Email address',
+        passwordPlaceholder: 'Enter password',
+        loginButton: 'Login',
+        forgotLink: 'Can’t log in?',
+        createLink: 'Create an account',
+        createAccountText: 'Please contact your administrator to create an account.',
+        forgotPasswordText: 'Please contact your administrator to recover access.',
+        errorMessage: 'Incorrect username or password.'
+      }
     };
 
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
+    // Установка языка
+    function detectLanguage() {
+      const lang = navigator.language.startsWith('ru') ? 'ru' : 'en';
+      const t = texts[lang];
+      document.getElementById('login-title').innerText = t.loginTitle;
+      document.getElementById('username').placeholder = t.usernamePlaceholder;
+      document.getElementById('password').placeholder = t.passwordPlaceholder;
+      document.getElementById('login-button').innerText = t.loginButton;
+      document.getElementById('forgot-link').innerText = t.forgotLink;
+      document.getElementById('create-link').innerText = t.createLink;
+      document.getElementById('create-link').dataset.modalText = t.createAccountText;
+      document.getElementById('forgot-link').dataset.modalText = t.forgotPasswordText;
+      document.getElementById('error-message').innerText = t.errorMessage;
     }
-</script>
+    detectLanguage();
+
+    // Всплывающие окна
+    const modal = document.getElementById('myModal');
+    const modalText = document.getElementById('modal-text');
+    document.querySelectorAll('#forgot-link, #create-link').forEach(el => {
+      el.addEventListener('click', e => {
+        e.preventDefault();
+        modalText.innerText = e.currentTarget.dataset.modalText;
+        modal.classList.add('open');
+      });
+    });
+    document.getElementById('modal-close').onclick = () => modal.classList.remove('open');
+    window.onclick = e => { if (e.target === modal) modal.classList.remove('open'); };
+
+    // Валидация формы
+    document.getElementById('login-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const u = document.getElementById('username');
+      const p = document.getElementById('password');
+      const err = document.getElementById('error-message');
+      u.classList.remove('error'); p.classList.remove('error');
+      err.style.display = 'none';
+
+      let hasError = false;
+      if (!u.value.trim()) { u.classList.add('error'); hasError = true; }
+      if (!p.value.trim()) { p.classList.add('error'); hasError = true; }
+
+      if (hasError) return;
+      // Если бы был реальный бекенд, тут пошёл бы AJAX-запрос...
+      err.style.display = 'block';
+    });
+  </script>
 
 </body>
 </html>
