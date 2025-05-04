@@ -7,8 +7,8 @@ Fork includes:
 - Changed port from `443` to `433` to avoid Russian blocks
 - Set `xver` to `0`
 - Replaced `sniffing` with `fallbacks`
-- Enabled the Telegram bot for Marzban
-- Tested on [cherryservers.com](https://www.cherryservers.com/pricing/virtual-servers)(Ubuntu 22.04)
+- Enabled Telegram bot for Marzban
+- Tested on [cherryservers.com](https://www.cherryservers.com/pricing/virtual-servers) (Ubuntu 22.04)
 
 ---
 

@@ -4,8 +4,8 @@
   "settings": {
     "vnext": [
       {
-        "address": "$VLESS_DOMAIN:433",
-        "port": 433,
+        "address": "$VLESS_DOMAIN:$XRAY_PORT",
+        "port": $XRAY_PORT,
         "users": [
           {
             "id": "$XRAY_UUID",
@@ -20,7 +20,7 @@
     "network": "tcp",
     "security": "reality",
     "realitySettings": {
-      "serverName": "$VLESS_DOMAIN:433",
+      "serverName": "$VLESS_DOMAIN:$XRAY_PORT",
       "fingerprint": "chrome",
       "publicKey": "$XRAY_PBK",
       "shortId": "$XRAY_SID",

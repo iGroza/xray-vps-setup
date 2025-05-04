@@ -1,13 +1,13 @@
 {
     "type": "vless",
-    "server": "$VLESS_DOMAIN:433",
-    "server_port": 433,
+    "server": "$VLESS_DOMAIN:$XRAY_PORT",
+    "server_port": $XRAY_PORT,
     "uuid": "$XRAY_UUID",
     "flow": "xtls-rprx-vision",
     "tls": {
         "enabled": true,
         "insecure": false,
-        "server_name": "$VLESS_DOMAIN:433",
+        "server_name": "$VLESS_DOMAIN:$XRAY_PORT",
         "utls": {
             "enabled": true,
             "fingerprint": "chrome"
