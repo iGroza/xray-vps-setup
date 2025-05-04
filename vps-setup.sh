@@ -32,12 +32,38 @@ fi
 
 read -ep "Do you want to install marzban? [y/N] "$'\n' marzban_input
 
+if [[ "${marzban_input,,}" == "y" ]]; then
+  read -ep "Do you want setup telegram bot for Marzban? [y/N] "$'\n' configure_tg_bot
+  if [[ ${configure_tg_bot,,} == "y" ]]; then
+    # Read bot token input
+    read -ep "Enter your telegram bot token:"$'\n' input_telegram_api_token
+    export TELEGRAM_API_TOKEN=$(echo $input_telegram_api_token | idn)
+
+    # Read user id input
+    read -ep "Enter your telegram user id, use @userinfobot:"$'\n' input_telegram_admin_id
+    export TELEGRAM_ADMIN_ID=$(echo $input_telegram_admin_id | idn)
+  fi
+fi
+
+# Custom xray port
+read -ep "Enter your custom xray port. Default 433, can't use ports: 80, 4123:"$'\n' input_xray_port
+
+while [[ "$input_xray_port" -eq "80" || "input_xray_port" -eq "4123" ]]; do
+  read -ep "No, ssh can't use $input_xray_port as port, write again:"$'\n' input_xray_port
+done
+
+if [[ -n "$input_xray_port" ]]; then
+  export XRAY_PORT=$input_xray_port
+else
+  export XRAY_PORT=433
+fi
+
 read -ep "Do you want to configure server security? Do this on first run only. [y/N] "$'\n' configure_ssh_input
 if [[ ${configure_ssh_input,,} == "y" ]]; then
   # Read SSH port
-  read -ep "Enter SSH port. Default 22, can't use ports: 80, 433 and 4123:"$'\n' input_ssh_port
+  read -ep "Enter SSH port. Default 22, can't use ports: 80, $input_xray_port and 4123:"$'\n' input_ssh_port
 
-  while [[ "$input_ssh_port" -eq "80" || "$input_ssh_port" -eq "433" || "$input_ssh_port" -eq "4123" ]]; do
+  while [[ "$input_ssh_port" -eq "80" || "$input_ssh_port" -eq "$input_xray_port" || "$input_ssh_port" -eq "4123" ]]; do
     read -ep "No, ssh can't use $input_ssh_port as port, write again:"$'\n' input_ssh_port
   done
   # Read SSH Pubkey
@@ -53,17 +79,6 @@ if [[ ${configure_ssh_input,,} == "y" ]]; then
 fi
 
 read -ep "Do you want to install WARP and use it on russian websites? [y/N] "$'\n' configure_warp_input
-
-read -ep "Do you want setup telegram bot for Marzban? [y/N] "$'\n' configure_tg_bot
-if [[ ${configure_tg_bot,,} == "y" ]]; then
-  # Read bot token input
-  read -ep "Enter your telegram bot token:"$'\n' input_telegram_api_token
-  export TELEGRAM_API_TOKEN=$(echo $input_telegram_api_token | idn)
-
-  # Read user id input
-  read -ep "Enter your telegram user id, use @userinfobot:"$'\n' input_telegram_admin_id
-  export TELEGRAM_ADMIN_ID=$(echo $input_telegram_admin_id | idn)
-fi
 
 # Check congestion protocol
 if sysctl net.ipv4.tcp_congestion_control | grep bbr; then
@@ -179,7 +194,7 @@ edit_iptables() {
   iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
   iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport $SSH_PORT -j ACCEPT
   iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
-  iptables -A INPUT -p tcp -m tcp --dport 433 -j ACCEPT
+  iptables -A INPUT -p tcp -m tcp --dport $XRAY_PORT -j ACCEPT
   iptables -A INPUT -i lo -j ACCEPT
   iptables -A OUTPUT -o lo -j ACCEPT
   iptables -P INPUT DROP
@@ -230,12 +245,12 @@ end_script() {
   if [[ "${marzban_input,,}" == "y" ]]; then
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
-    echo "Marzban location: https://$VLESS_DOMAIN:433/$MARZBAN_PATH. Marzban user: xray_admin, password: $MARZBAN_PASS"
+    echo "Marzban location: https://$VLESS_DOMAIN:$XRAY_PORT/$MARZBAN_PATH. Marzban user: xray_admin, password: $MARZBAN_PASS"
   else
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
     echo "Clipboard string format"
-    echo "vless://$XRAY_UUID@$VLESS_DOMAIN:433?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision" | envsubst
+    echo "vless://$XRAY_UUID@$VLESS_DOMAIN:$XRAY_PORT?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision" | envsubst
     echo "XRay outbound config"
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray_outbound | envsubst 
     echo "Sing-box outbound config"

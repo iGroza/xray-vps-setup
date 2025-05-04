@@ -1,17 +1,5 @@
 # xray-vps-setup
 
----
-
-Fork includes:
-
-- Changed port from `443` to `433` to avoid Russian blocks
-- Set `xver` to `0`
-- Replaced `sniffing` with `fallbacks`
-- Enabled the Telegram bot for Marzban
-- Tested on [cherryservers.com](https://www.cherryservers.com/pricing/virtual-servers)(Ubuntu 22.04)
-
----
-
 VLESS со своим доменом. А что еще нужно для счастья?  
 
 В данном варианте VLESS слушает на 433 и принимате все запросы, делая запрос на локальный Caddy только для сертификатов. В таком варианте задержка будет меньше, чем в варианте с Caddy/NGINX перед VLESS, где происходит множество лишних запросов.
@@ -26,7 +14,7 @@ VLESS со своим доменом. А что еще нужно для сча�
 - Настроит WARP для ру-сайтов.  
 
 ```bash
-bash <(wget -qO- https://raw.githubusercontent.com/igroza/xray-vps-setup/refs/heads/main/vps-setup.sh)
+bash <(wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/vps-setup.sh)
 ```
 
 ## Плейбук

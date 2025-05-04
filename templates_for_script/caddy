@@ -16,7 +16,7 @@ https://$VLESS_DOMAIN {
 }
 http://$VLESS_DOMAIN {
         bind 0.0.0.0
-        redir https://$VLESS_DOMAIN:433{uri} permanent
+        redir https://$VLESS_DOMAIN:$XRAY_PORT{uri} permanent
 }
 :4123 {
         tls internal
