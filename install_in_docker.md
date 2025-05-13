@@ -342,8 +342,8 @@ wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O 
 ```
 Далее с помощью `yq` мы установим в уже существующий кофниг WARP:
 ```bash
-yq eval '.outbounds[.outbounds | length ] |= . + {"tag": "warp","protocol": "socks","settings": {"servers": [{"address": "127.0.0.1","port": 40000}]}}' -i $XRAY_CONFIG_WARP
-yq eval '.routing.rules[.routing.rules | length ] |= . + {"outboundTag": "warp", "domain": ["geosite:category-ru"]}' -i $XRAY_CONFIG_WARP
+yq eval '.outbounds += {"tag": "warp","protocol": "socks","settings": {"servers": [{"address": "127.0.0.1","port": 40000}]}}' -i $XRAY_CONFIG_WARP
+yq eval '.routing.rules += {"outboundTag": "warp", "domain": ["geosite:category-ru", "regexp:.*\\.xn--$", "regexp:.*\\.ru$", "regexp:.*\\.su$"]}' -i $XRAY_CONFIG_WARP
 
 ```
 Заменяем $XRAY_CONFIG_WARP на `/opt/xray-vps-setup/marzban/xray_config.json` для marzban и на `/opt/xray-vps-setup/xray/config.json` для чистого xray. После этого перезапускаем все:

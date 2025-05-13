@@ -31,14 +31,14 @@
         argv:
           - yq
           - eval
-          - '.outbounds[.outbounds | length ] |= . + {"tag": "warp", "protocol": "socks","settings": {"servers": [{"address": "127.0.0.1","port": 40000}]}}'
+          - '.outbounds += {"tag": "warp","protocol": "socks","settings": {"servers": [{"address": "127.0.0.1","port": 40000}]}}'
           - -i
           - /opt/xray-vps-setup/xray/config.json
     - command:
         argv:
           - yq
           - eval
-          - '.routing.rules[.routing.rules | length ] |= . + {"outboundTag": "warp", "domain": ["geosite:category-ru"]}'
+          - '.routing.rules += {"outboundTag": "warp", "domain": ["geosite:category-ru", "regexp:.*\\.xn--$", "regexp:.*\\.ru$", "regexp:.*\\.su$"]}'
           - -i
           - /opt/xray-vps-setup/xray/config.json
   when: setup_variant == "xray"
@@ -48,14 +48,14 @@
         argv: 
           - yq
           - eval
-          - '.outbounds[.outbounds | length ] |= . + {"tag": "warp", "protocol": "socks","settings": {"servers": [{"address": "127.0.0.1","port": 40000}]}}'
+          - '.outbounds += {"tag": "warp","protocol": "socks","settings": {"servers": [{"address": "127.0.0.1","port": 40000}]}}'
           - -i
           - /opt/xray-vps-setup/marzban/xray_config.json
     - command:
         argv:
           - yq
           - eval
-          - '.routing.rules[.routing.rules | length ] |= . + {"outboundTag": "warp", "domain": ["geosite:category-ru"]}'
+          - '.routing.rules += {"outboundTag": "warp", "domain": ["geosite:category-ru", "regexp:.*\\.xn--$", "regexp:.*\\.ru$", "regexp:.*\\.su$"]}'
           - -i
           - /opt/xray-vps-setup/marzban/xray_config.json
   when: setup_variant == "marzban"
