@@ -1,6 +1,7 @@
 services:
   caddy:
     image: caddy:2.9
+    container_name: caddy
     restart: always
     network_mode: host
     volumes:
@@ -9,6 +10,7 @@ services:
       - ./marzban_lib:/run/marzban
   marzban:
     image: gozargah/marzban:v0.8.4
+    container_name: marzban
     restart: always
     env_file: ./marzban/.env
     network_mode: host

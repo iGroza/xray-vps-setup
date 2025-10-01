@@ -12,3 +12,4 @@
   service:
     name: ssh
     state: restarted
+    daemon_reload: true

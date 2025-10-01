@@ -13,7 +13,7 @@ fi
 
 # Install idn 
 apt-get update
-apt-get install idn -y
+apt-get install idn sudo -y
 
 # Read domain input
 read -ep "Enter your domain:"$'\n' input_domain
@@ -90,8 +90,10 @@ else
     echo "Enabled BBR"
 fi
 
+export ARCH=$(dpkg --print-architecture)
+
 yq_install() {
-  wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
+  wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_$ARCH -O /usr/bin/yq && chmod +x /usr/bin/yq
 }
 
 yq_install
@@ -111,8 +113,8 @@ export SSH_PORT=${input_ssh_port:-22}
 export ROOT_LOGIN="yes"
 export IP_CADDY=$(hostname -I | cut -d' ' -f1)
 export CADDY_BASIC_AUTH=$(docker run --rm caddy caddy hash-password --plaintext $SSH_USER_PASS)
-export XRAY_PIK=$(docker run --rm ghcr.io/xtls/xray-core x25519 | head -n1 | cut -d' ' -f 3)
-export XRAY_PBK=$(docker run --rm ghcr.io/xtls/xray-core x25519 -i $XRAY_PIK | tail -1 | cut -d' ' -f 3)
+export XRAY_PIK=$(docker run --rm ghcr.io/xtls/xray-core x25519 | head -n1 | cut -d' ' -f 2)
+export XRAY_PBK=$(docker run --rm ghcr.io/xtls/xray-core x25519 -i $XRAY_PIK | tail -2 | head -1 | cut -d' ' -f 2)
 export XRAY_SID=$(openssl rand -hex 8)
 export XRAY_UUID=$(docker run --rm ghcr.io/xtls/xray-core uuid)
 export XRAY_CFG="/usr/local/etc/xray/config.json"
@@ -128,6 +130,7 @@ xray_setup() {
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/compose | envsubst > ./docker-compose.yml
     yq eval \
     '.services.marzban.image = "gozargah/marzban:v0.8.4" |
+     .services.marzban.container_name = "marzban" |
      .services.marzban.restart = "always" |
      .services.marzban.env_file = "./marzban/.env" |
      .services.marzban.network_mode = "host" | 
@@ -146,7 +149,10 @@ xray_setup() {
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/compose | envsubst > ./docker-compose.yml
     mkdir -p /opt/xray-vps-setup/caddy/templates
     yq eval \
-    '.services.xray.image = "ghcr.io/xtls/xray-core:25.1.1" | 
+    '.services.xray.image = "ghcr.io/xtls/xray-core:25.6.8" | 
+    .services.xray.container_name = "xray" |
+    .services.xray.user = "root" |
+    .services.xray.command = "run -c /etc/xray/config.json" |
     .services.xray.restart = "always" | 
     .services.xray.network_mode = "host" | 
     .services.caddy.volumes[2] = "./caddy/templates:/srv" |
@@ -166,11 +172,12 @@ sshd_edit() {
   grep -r Port /etc/ssh -l | xargs -n 1 sed -i -e "/Port /c\Port $SSH_PORT"
   grep -r PasswordAuthentication /etc/ssh -l | xargs -n 1 sed -i -e "/PasswordAuthentication /c\PasswordAuthentication no"
   grep -r PermitRootLogin /etc/ssh -l | xargs -n 1 sed -i -e "/PermitRootLogin /c\PermitRootLogin no"
+  systemctl daemon-reload
   systemctl restart ssh
 }
 
 add_user() {
-  useradd $SSH_USER
+  useradd $SSH_USER -s /bin/bash
   usermod -aG sudo $SSH_USER
   echo $SSH_USER:$SSH_USER_PASS | chpasswd
   mkdir -p /home/$SSH_USER/.ssh
@@ -205,7 +212,6 @@ if [[ ${configure_ssh_input,,} == "y" ]]; then
   sshd_edit
   add_user
   edit_iptables
-  echo "New user for ssh: $SSH_USER, password for user: $SSH_USER_PASS. New port for SSH: $SSH_PORT."
 fi
 
 # WARP Install function
@@ -245,10 +251,18 @@ end_script() {
   if [[ "${marzban_input,,}" == "y" ]]; then
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
-    echo "Marzban location: https://$VLESS_DOMAIN:$XRAY_PORT/$MARZBAN_PATH. Marzban user: xray_admin, password: $MARZBAN_PASS"
+    clear
+    if [[ ${configure_ssh_input,,} == "y" ]]; then
+      echo "New user for ssh: $SSH_USER, password for user: $SSH_USER_PASS. New port for SSH: $SSH_PORT."
+    fi
+    echo "Marzban location: https://$VLESS_DOMAIN/$MARZBAN_PATH . Marzban user: xray_admin, password: $MARZBAN_PASS"
   else
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
+    clear
+    if [[ ${configure_ssh_input,,} == "y" ]]; then
+      echo "New user for ssh: $SSH_USER, password for user: $SSH_USER_PASS. New port for SSH: $SSH_PORT."
+    fi
     echo "Clipboard string format"
     echo "vless://$XRAY_UUID@$VLESS_DOMAIN:$XRAY_PORT?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision" | envsubst
     echo "XRay outbound config"
