@@ -127,7 +127,17 @@ fi
 export ARCH=$(dpkg --print-architecture)
 
 yq_install() {
+  # Remove Python yq if installed to avoid conflicts
+  pip3 uninstall yq -y 2>/dev/null || true
+  apt-get remove yq -y 2>/dev/null || true
+  
   wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_$ARCH -O /usr/bin/yq && chmod +x /usr/bin/yq
+  
+  # Verify we have the correct yq (mikefarah's version)
+  if ! /usr/bin/yq --version 2>&1 | grep -q "mikefarah"; then
+    echo "Error: Wrong yq version installed"
+    exit 1
+  fi
 }
 
 yq_install
