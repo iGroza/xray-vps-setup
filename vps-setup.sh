@@ -19,14 +19,42 @@ apt-get install idn sudo -y
 read -ep "Enter your domain:"$'\n' input_domain
 
 export VLESS_DOMAIN=$(echo $input_domain | idn)
-export TEST_DOMAIN=$(nslookup $VLESS_DOMAIN | awk -F': ' 'NR==6 { print $2 } ')
-if [ $TEST_DOMAIN -eq "" ]; then
+
+SERVER_IPS=($(hostname -I))
+
+RESOLVED_IP=$(dig +short $VLESS_DOMAIN | tail -n1)
+
+if [ -z "$RESOLVED_IP" ]; then
+  echo "Warning: Domain has no DNS record"
   read -ep "Are you sure? That domain has no DNS record. If you didn't add that you will have to restart xray and caddy by yourself [y/N]"$'\n' prompt_response
-  if [[ "$prompt_response" =~ ^([yY]) ]]; then
-    echo "Ok"
+  if [[ "$prompt_response" =~ ^([yY])$ ]]; then
+    echo "Ok, proceeding without DNS verification"
   else 
     echo "Come back later"
     exit 1
+  fi
+else
+  MATCH_FOUND=false
+  for server_ip in "${SERVER_IPS[@]}"; do
+    if [ "$RESOLVED_IP" == "$server_ip" ]; then
+      MATCH_FOUND=true
+      break
+    fi
+  done
+  
+  if [ "$MATCH_FOUND" = true ]; then
+    echo "✓ DNS record points to this server ($RESOLVED_IP)"
+  else
+    echo "Warning: DNS record exists but points to different IP"
+    echo "  Domain resolves to: $RESOLVED_IP"
+    echo "  This server's IPs: ${SERVER_IPS[*]}"
+    read -ep "Continue anyway? [y/N]"$'\n' prompt_response
+    if [[ "$prompt_response" =~ ^([yY])$ ]]; then
+      echo "Ok, proceeding"
+    else 
+      echo "Come back later"
+      exit 1
+    fi
   fi
 fi
 
@@ -79,6 +107,12 @@ if [[ ${configure_ssh_input,,} == "y" ]]; then
 fi
 
 read -ep "Do you want to install WARP and use it on russian websites? [y/N] "$'\n' configure_warp_input
+if [[ ${configure_warp_input,,} == "y" ]]; then
+  if ! curl -I https://api.cloudflareclient.com --connect-timeout 10 > /dev/null 2>&1; then
+    echo "Warp can't be used"
+    configure_warp_input="n"
+  fi
+fi
 
 # Check congestion protocol
 if sysctl net.ipv4.tcp_congestion_control | grep bbr; then
@@ -248,34 +282,48 @@ warp_install() {
 }
 
 end_script() {
+  if [[ ${configure_warp_input,,} == "y" ]]; then
+    warp_install
+  fi
+  
   if [[ "${marzban_input,,}" == "y" ]]; then
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
-    clear
     if [[ ${configure_ssh_input,,} == "y" ]]; then
       echo "New user for ssh: $SSH_USER, password for user: $SSH_USER_PASS. New port for SSH: $SSH_PORT."
     fi
-    echo "Marzban location: https://$VLESS_DOMAIN/$MARZBAN_PATH . Marzban user: xray_admin, password: $MARZBAN_PASS"
+    final_msg="Marzban panel location: https://$VLESS_DOMAIN/$MARZBAN_PATH
+User: xray_admin
+Password: $MARZBAN_PASS
+    "
   else
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
-    clear
     if [[ ${configure_ssh_input,,} == "y" ]]; then
       echo "New user for ssh: $SSH_USER, password for user: $SSH_USER_PASS. New port for SSH: $SSH_PORT."
     fi
-    echo "Clipboard string format"
-    echo "vless://$XRAY_UUID@$VLESS_DOMAIN:$XRAY_PORT?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision" | envsubst
-    echo "XRay outbound config"
-    wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray_outbound | envsubst 
-    echo "Sing-box outbound config"
-    wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/sing_box_outbound | envsubst 
-    echo "Plain data"
-    echo "PBK: $XRAY_PBK, SID: $XRAY_SID, UUID: $XRAY_UUID"
+
+    xray_config=$(wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray_outbound" | envsubst)
+    singbox_config=$(wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/sing_box_outbound" | envsubst)
+
+    final_msg="Clipboard string format:
+vless://$XRAY_UUID@$VLESS_DOMAIN:$XRAY_PORT?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision
+
+XRay outbound config:
+$xray_config
+
+Sing-box outbound config:
+$singbox_config
+
+Plain data:
+PBK: $XRAY_PBK, SID: $XRAY_SID, UUID: $XRAY_UUID
+    "    
   fi
+
+  docker rmi ghcr.io/xtls/xray-core:latest caddy:latest
+  clear
+  echo "$final_msg"
 }
 
 end_script
 set +e
-if [[ ${configure_warp_input,,} == "y" ]]; then
-  warp_install
-fi
