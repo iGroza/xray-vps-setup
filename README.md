@@ -54,7 +54,7 @@ bash <(wget -qO- https://raw.githubusercontent.com/igroza/xray-vps-setup/refs/he
 ```
 bash <(wget -qO- https://github.com/legiz-ru/marz-sub/raw/main/marz-sub.sh)
 ```
-После этого сделайте `docker compose -f /opt/xray-vps-setup down && docker compose -f /opt/xray-vps-setup up -d` 
+После этого сделайте `docker compose -f /opt/xray-vps-setup/docker-compose.yml down && docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d` 
 
 
 ## Ручная установка

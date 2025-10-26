@@ -299,19 +299,17 @@ end_script() {
   if [[ "${marzban_input,,}" == "y" ]]; then
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
-    if [[ ${configure_ssh_input,,} == "y" ]]; then
-      echo "New user for ssh: $SSH_USER, password for user: $SSH_USER_PASS. New port for SSH: $SSH_PORT."
-    fi
+
     final_msg="Marzban panel location: https://$VLESS_DOMAIN/$MARZBAN_PATH
 User: xray_admin
 Password: $MARZBAN_PASS
     "
-  else
-    docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
-    docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
     if [[ ${configure_ssh_input,,} == "y" ]]; then
       echo "New user for ssh: $SSH_USER, password for user: $SSH_USER_PASS. New port for SSH: $SSH_PORT."
     fi
+  else
+    docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
+    docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
 
     xray_config=$(wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray_outbound" | envsubst)
     singbox_config=$(wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/sing_box_outbound" | envsubst)
@@ -333,6 +331,9 @@ PBK: $XRAY_PBK, SID: $XRAY_SID, UUID: $XRAY_UUID
   docker rmi ghcr.io/xtls/xray-core:latest caddy:latest
   clear
   echo "$final_msg"
+  if [[ ${configure_ssh_input,,} == "y" ]]; then
+    echo "New user for ssh: $SSH_USER, password for user: $SSH_USER_PASS. New port for SSH: $SSH_PORT."
+  fi
 }
 
 end_script
