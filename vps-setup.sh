@@ -13,7 +13,7 @@ fi
 
 # Install idn 
 apt-get update
-apt-get install idn sudo -y
+apt-get install idn sudo dnsutils -y 
 
 # Read domain input
 read -ep "Enter your domain:"$'\n' input_domain
