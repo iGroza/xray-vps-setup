@@ -143,7 +143,7 @@ yq_install() {
 yq_install
 
 docker_install() {
-  bash <(wget -qO- https://get.docker.com) @ -o get-docker.sh
+  curl -fsSL https://get.docker.com | sh
 }
 
 if ! command -v docker 2>&1 >/dev/null; then
@@ -253,8 +253,8 @@ edit_iptables() {
 }
 
 if [[ ${configure_ssh_input,,} == "y" ]]; then
-  sshd_edit
   add_user
+  sshd_edit
   edit_iptables
 fi
 

@@ -26,7 +26,8 @@ VLESS со своим доменом. А что еще нужно для сча�
 - Настроит WARP для ру-сайтов.  
 
 ```bash
-bash <(wget -qO- https://raw.githubusercontent.com/igroza/xray-vps-setup/refs/heads/main/vps-setup.sh)
+tmux
+bash <(wget -qO- https://raw.githubusercontent.com/iGroza/xray-vps-setup/refs/heads/main/vps-setup.sh)
 ```
 
 ## Плейбук
