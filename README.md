@@ -8,7 +8,12 @@ Fork includes:
 - Set `xver` to `0`
 - Replaced `sniffing` with `fallbacks`
 - Enabled Telegram bot for Marzban
+- Xray-core pinned to `26.6.27`, key generation uses the same pinned image
+- Default client config name: `🇩🇪 <domain> | <marzban username>` (Marzban) / `🇩🇪 <domain>` (plain xray)
 - Tested on [cherryservers.com](https://www.cherryservers.com/pricing/virtual-servers) (Ubuntu 22.04)
+
+> [!NOTE]
+> Начиная с Xray-core 26.3.27 ядро пишет предупреждение, что REALITY на не-443 порту легче детектится и «easily gets the server IP blocked». Порт 433 остаётся дефолтом форка, но при установке можно указать 443, если он свободен.
 
 ---
 
@@ -48,6 +53,8 @@ bash <(wget -qO- https://raw.githubusercontent.com/iGroza/xray-vps-setup/refs/he
     user_password: "xray_password" # если configure_security: true, то обязательно
     SSH_PORT: 22 # если configure_security: true, то обязательно
     ssh_public_key: "" # если configure_security: true, то обязательно
+    xray_port: 433 # опционально, порт VLESS Reality (дефолт 433)
+    xray_version: "26.6.27" # опционально, тег образа ghcr.io/xtls/xray-core
 ```
 
 ## Добавляем подписку и поддержку Mihomo

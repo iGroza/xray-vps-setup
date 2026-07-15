@@ -19,13 +19,15 @@
   when: configure_security|default(false)|bool == true
 - name: Generate values
   block:
-    - name: Generate x25519 PIK 
+    # xray >= 25.4.30 prints "PrivateKey:", newer builds print "Password (PublicKey):"
+    # instead of "Public key:", so match by label and take the last field
+    - name: Generate x25519 PIK
       shell:
-        cmd: docker run --rm ghcr.io/xtls/xray-core x25519 | head -n1 | cut -d' ' -f 3
+        cmd: docker run --rm ghcr.io/xtls/xray-core:{{ xray_version }} x25519 | grep -i '^PrivateKey' | awk '{print $NF}'
       register: x25519_pik
-    - name: Generate x25519 PBK 
+    - name: Generate x25519 PBK
       shell:
-        cmd: docker run --rm ghcr.io/xtls/xray-core x25519 -i {{ x25519_pik.stdout }} | tail -1 | cut -d' ' -f 3
+        cmd: docker run --rm ghcr.io/xtls/xray-core:{{ xray_version }} x25519 -i {{ x25519_pik.stdout }} | grep -iE '^(Password|Public key)' | awk '{print $NF}'
       register: x25519_pbk
     - name: Generate SID
       shell:
@@ -33,7 +35,7 @@
       register: short_id
     - name: Generate default user
       shell:
-        cmd: docker run --rm ghcr.io/xtls/xray-core uuid
+        cmd: docker run --rm ghcr.io/xtls/xray-core:{{ xray_version }} uuid
       register: xray_uuid
 - name: Install marzban
   include_tasks: install_marzban.yml
@@ -52,3 +54,6 @@
 - name: End xray
   include_tasks: end_xray.yml
   when: setup_variant == "xray"
+- name: End marzban
+  include_tasks: end_marzban.yml
+  when: setup_variant == "marzban"

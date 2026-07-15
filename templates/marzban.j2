@@ -1,10 +1,10 @@
 SUDO_USERNAME = "xray_admin"
-SUDO_PASSWORD = "$MARZBAN_PASS"
+SUDO_PASSWORD = "{{ MARZBAN_PASS }}"
 UVICORN_UDS = "/var/lib/marzban/marzban.socket"
-DASHBOARD_PATH = "/$MARZBAN_PATH/"
+DASHBOARD_PATH = "/{{ MARZBAN_PATH }}/"
 XRAY_JSON = "xray_config.json"
-XRAY_SUBSCRIPTION_URL_PREFIX = "https://$VLESS_DOMAIN:$XRAY_PORT"
-XRAY_SUBSCRIPTION_PATH = "$MARZBAN_SUB_PATH"
+XRAY_SUBSCRIPTION_URL_PREFIX = "https://{{ domain }}:{{ xray_port }}"
+XRAY_SUBSCRIPTION_PATH = "{{ MARZBAN_SUB_PATH }}"
 SQLALCHEMY_DATABASE_URL = "sqlite:////var/lib/marzban/db.sqlite3"
 # ALLOWED_ORIGINS=http://localhost,http://localhost:8000,http://example.com
 # XRAY_EXECUTABLE_PATH = "/usr/local/bin/xray"
@@ -12,8 +12,8 @@ SQLALCHEMY_DATABASE_URL = "sqlite:////var/lib/marzban/db.sqlite3"
 # XRAY_EXCLUDE_INBOUND_TAGS = "INBOUND_X INBOUND_Y"
 # XRAY_FALLBACKS_INBOUND_TAG = "INBOUND_X"
 
-TELEGRAM_API_TOKEN = "$TELEGRAM_API_TOKEN"
-TELEGRAM_ADMIN_ID = "$TELEGRAM_ADMIN_ID"
+TELEGRAM_API_TOKEN = "{{ TELEGRAM_API_TOKEN | default('') }}"
+TELEGRAM_ADMIN_ID = "{{ TELEGRAM_ADMIN_ID | default('') }}"
 # TELEGRAM_LOGGER_CHANNEL_ID = -1234567890123
 TELEGRAM_DEFAULT_VLESS_FLOW = "xtls-rprx-vision"
 # TELEGRAM_PROXY_URL = "http://localhost:8080"
@@ -42,7 +42,7 @@ HOME_PAGE_TEMPLATE="home/index.html"
 # USE_CUSTOM_JSON_FOR_STREISAND=False
 
 ## Set headers for subscription
-# SUB_PROFILE_TITLE = "Susbcription"
+SUB_PROFILE_TITLE = "🇩🇪 {{ domain }}"
 # SUB_SUPPORT_URL = "https://t.me/support"
 # SUB_UPDATE_INTERVAL = "12"
 

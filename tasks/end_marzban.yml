@@ -1,0 +1,43 @@
+- name: Wait for marzban database
+  wait_for:
+    path: /opt/xray-vps-setup/marzban_lib/db.sqlite3
+    timeout: 120
+- name: Copy default host rename script
+  copy:
+    dest: /opt/xray-vps-setup/marzban_lib/set_default_host.py
+    content: |
+      import sqlite3, sys
+      remark = sys.argv[1]
+      con = sqlite3.connect('/var/lib/marzban/db.sqlite3')
+      cur = con.cursor()
+      try:
+          cur.execute("SELECT COUNT(*) FROM hosts WHERE remark = ?", (remark,))
+          if cur.fetchone()[0]:
+              print(1)
+          else:
+              cur.execute("UPDATE hosts SET remark = ? WHERE remark LIKE '%Marz%'", (remark,))
+              con.commit()
+              print(1 if cur.rowcount else 0)
+      except sqlite3.OperationalError:
+          print(0)
+# Marzban creates the default host ("🚀 Marz ({USERNAME}) ...") on first start;
+# rename it so client apps show "🇩🇪 <domain> | <marzban username>"
+- name: Set default host remark
+  shell:
+    cmd: docker exec marzban python3 /var/lib/marzban/set_default_host.py "🇩🇪 {{ domain }} | {USERNAME}"
+  register: remark_result
+  retries: 30
+  delay: 2
+  until: remark_result.stdout == "1"
+  failed_when: false
+- name: Remove default host rename script
+  file:
+    path: /opt/xray-vps-setup/marzban_lib/set_default_host.py
+    state: absent
+- name: Restart marzban to reload hosts
+  shell:
+    cmd: docker restart marzban
+  when: remark_result.stdout | default("0") == "1"
+- name: Print marzban panel location
+  debug:
+    msg: "Marzban panel: https://{{ domain }}:{{ xray_port }}/{{ MARZBAN_PATH }}/ (user: xray_admin, password: {{ MARZBAN_PASS }})"

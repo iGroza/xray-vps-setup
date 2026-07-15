@@ -27,9 +27,9 @@ https://{{ domain }} {
     }
   }
 }
-http://{{ domain }}:$XRAY_PORT {
+http://{{ domain }} {
   bind 0.0.0.0
-  redir https://{host}:$XRAY_PORT{uri} permanent
+  redir https://{{ domain }}:{{ xray_port }}{uri} permanent
 
   header {
     -Server

@@ -1,9 +1,10 @@
-#/bin/bash
+#!/bin/bash
 
 set -e
 
 export GIT_BRANCH="main"
 export GIT_REPO="igroza/xray-vps-setup"
+export XRAY_VERSION="26.6.27"
 
 # Check if script started as root
 if [ "$EUID" -ne 0 ]
@@ -57,6 +58,10 @@ else
     fi
   fi
 fi
+
+# URL-encoded remark for the share link: "🇩🇪 <domain>"
+# (%F0%9F%87%A9%F0%9F%87%AA is the 🇩🇪 emoji, %20 space)
+export XRAY_REMARK_ENC="%F0%9F%87%A9%F0%9F%87%AA%20$VLESS_DOMAIN"
 
 read -ep "Do you want to install marzban? [y/N] "$'\n' marzban_input
 
@@ -157,10 +162,17 @@ export SSH_PORT=${input_ssh_port:-22}
 export ROOT_LOGIN="yes"
 export IP_CADDY=$(hostname -I | cut -d' ' -f1)
 export CADDY_BASIC_AUTH=$(docker run --rm caddy caddy hash-password --plaintext $SSH_USER_PASS)
-export XRAY_PIK=$(docker run --rm ghcr.io/xtls/xray-core x25519 | head -n1 | cut -d' ' -f 2)
-export XRAY_PBK=$(docker run --rm ghcr.io/xtls/xray-core x25519 -i $XRAY_PIK | tail -2 | head -1 | cut -d' ' -f 2)
+# xray >= 25.4.30 prints "PrivateKey:", newer builds print "Password (PublicKey):"
+# instead of "Public key:", so match by label and take the last field
+export XRAY_PIK=$(docker run --rm ghcr.io/xtls/xray-core:$XRAY_VERSION x25519 | grep -i '^PrivateKey' | awk '{print $NF}')
+export XRAY_PBK=$(docker run --rm ghcr.io/xtls/xray-core:$XRAY_VERSION x25519 -i $XRAY_PIK | grep -iE '^(Password|Public key)' | awk '{print $NF}')
 export XRAY_SID=$(openssl rand -hex 8)
-export XRAY_UUID=$(docker run --rm ghcr.io/xtls/xray-core uuid)
+export XRAY_UUID=$(docker run --rm ghcr.io/xtls/xray-core:$XRAY_VERSION uuid)
+
+if [[ -z "$XRAY_PIK" || -z "$XRAY_PBK" || -z "$XRAY_UUID" ]]; then
+  echo "Error: failed to generate Reality keypair or UUID"
+  exit 1
+fi
 export XRAY_CFG="/usr/local/etc/xray/config.json"
 
 # Install marzban
@@ -193,7 +205,7 @@ xray_setup() {
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/compose | envsubst > ./docker-compose.yml
     mkdir -p /opt/xray-vps-setup/caddy/templates
     yq eval \
-    '.services.xray.image = "ghcr.io/xtls/xray-core:25.6.8" | 
+    '.services.xray.image = "ghcr.io/xtls/xray-core:" + strenv(XRAY_VERSION) |
     .services.xray.container_name = "xray" |
     .services.xray.user = "root" |
     .services.xray.command = "run -c /etc/xray/config.json" |
@@ -300,7 +312,40 @@ end_script() {
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
 
-    final_msg="Marzban panel location: https://$VLESS_DOMAIN/$MARZBAN_PATH
+    # Default config name shown in client apps: "🇩🇪 <domain> | <marzban username>".
+    # Marzban creates the default host ("🚀 Marz ({USERNAME}) ...") on first start,
+    # rename it once the row appears, then restart so the in-memory hosts reload.
+    cat > /opt/xray-vps-setup/marzban_lib/set_default_host.py <<'PYEOF'
+import sqlite3, sys
+remark = sys.argv[1]
+con = sqlite3.connect('/var/lib/marzban/db.sqlite3')
+cur = con.cursor()
+try:
+    cur.execute("SELECT COUNT(*) FROM hosts WHERE remark = ?", (remark,))
+    if cur.fetchone()[0]:
+        print(1)
+    else:
+        cur.execute("UPDATE hosts SET remark = ? WHERE remark LIKE '%Marz%'", (remark,))
+        con.commit()
+        print(1 if cur.rowcount else 0)
+except sqlite3.OperationalError:
+    print(0)
+PYEOF
+    echo "Waiting for Marzban to create the default host..."
+    REMARK_SET=0
+    for _ in $(seq 1 60); do
+      REMARK_SET=$(docker exec marzban python3 /var/lib/marzban/set_default_host.py "🇩🇪 $VLESS_DOMAIN | {USERNAME}" 2>/dev/null || echo 0)
+      if [ "$REMARK_SET" = "1" ]; then break; fi
+      sleep 2
+    done
+    rm -f /opt/xray-vps-setup/marzban_lib/set_default_host.py
+    if [ "$REMARK_SET" = "1" ]; then
+      docker restart marzban > /dev/null
+    else
+      echo "Warning: couldn't rename the default host, set it in the panel: Host Settings"
+    fi
+
+    final_msg="Marzban panel location: https://$VLESS_DOMAIN:$XRAY_PORT/$MARZBAN_PATH/
 User: xray_admin
 Password: $MARZBAN_PASS
     "
@@ -315,7 +360,7 @@ Password: $MARZBAN_PASS
     singbox_config=$(wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/sing_box_outbound" | envsubst)
 
     final_msg="Clipboard string format:
-vless://$XRAY_UUID@$VLESS_DOMAIN:$XRAY_PORT?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision
+vless://$XRAY_UUID@$VLESS_DOMAIN:$XRAY_PORT?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision#$XRAY_REMARK_ENC
 
 XRay outbound config:
 $xray_config
@@ -328,7 +373,13 @@ PBK: $XRAY_PBK, SID: $XRAY_SID, UUID: $XRAY_UUID
     "    
   fi
 
-  docker rmi ghcr.io/xtls/xray-core:latest caddy:latest
+  # caddy:latest was only used for hash-password/fmt (compose runs caddy:2.9);
+  # the pinned xray image stays in use by the xray variant, drop it for marzban only
+  if [[ "${marzban_input,,}" == "y" ]]; then
+    docker rmi ghcr.io/xtls/xray-core:$XRAY_VERSION caddy:latest || true
+  else
+    docker rmi caddy:latest || true
+  fi
   clear
   echo "$final_msg"
   if [[ ${configure_ssh_input,,} == "y" ]]; then

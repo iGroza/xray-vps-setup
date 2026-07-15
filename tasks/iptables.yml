@@ -23,13 +23,13 @@
         chain: INPUT
         protocol: icmp
         jump: ACCEPT
-    - name: Allow 80, $XRAY_PORT connections
+    - name: Allow 80 and xray port connections
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
         destination_ports:
           - "80"
-          - "$XRAY_PORT"
+          - "{{ xray_port }}"
         jump: ACCEPT
     - name: Allow loopback in
       shell:

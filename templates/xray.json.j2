@@ -6,12 +6,12 @@
     {
       "tag": "VLESS TCP VISION REALITY",
       "listen": "0.0.0.0",
-      "port": $XRAY_PORT,
+      "port": {{ xray_port }},
       "protocol": "vless",
       "settings": {
         "clients": [
           {
-            "id": "$XRAY_UUID",
+            "id": "{{ xray_uuid.stdout }}",
             "flow": "xtls-rprx-vision"
           }
         ],
@@ -35,11 +35,11 @@
           "xver": 0,
           "dest": "127.0.0.1:4123",
           "serverNames": [
-            "$VLESS_DOMAIN"
+            "{{ domain }}"
           ],
-          "privateKey": "$XRAY_PIK",
+          "privateKey": "{{ x25519_pik.stdout }}",
           "shortIds": [
-            "$XRAY_SID"
+            "{{ short_id.stdout }}"
           ]
         }
       }
