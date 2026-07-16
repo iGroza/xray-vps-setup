@@ -21,10 +21,10 @@
       except sqlite3.OperationalError:
           print(0)
 # Marzban creates the default host ("🚀 Marz ({USERNAME}) ...") on first start;
-# rename it so client apps show "🇩🇪 <domain> | <marzban username>"
+# rename it so client apps show "🏴‍☠️ <domain> | <marzban username>"
 - name: Set default host remark
   shell:
-    cmd: docker exec marzban python3 /var/lib/marzban/set_default_host.py "🇩🇪 {{ domain }} | {USERNAME}"
+    cmd: docker exec marzban python3 /var/lib/marzban/set_default_host.py "🏴‍☠️ {{ domain }} | {USERNAME}"
   register: remark_result
   retries: 30
   delay: 2

@@ -9,7 +9,7 @@ Fork includes:
 - Replaced `sniffing` with `fallbacks`
 - Enabled Telegram bot for Marzban
 - Xray-core pinned to `26.6.27`, key generation uses the same pinned image
-- Default client config name: `🇩🇪 <domain> | <marzban username>` (Marzban) / `🇩🇪 <domain>` (plain xray)
+- Default client config name: `🏴‍☠️ <domain> | <marzban username>` (Marzban) / `🏴‍☠️ <domain>` (plain xray)
 - Tested on [cherryservers.com](https://www.cherryservers.com/pricing/virtual-servers) (Ubuntu 22.04)
 
 > [!NOTE]

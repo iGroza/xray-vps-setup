@@ -1,6 +1,6 @@
 - name: Print clipboard string
   debug:
-    msg: "vless://{{ xray_uuid.stdout }}@{{ domain }}:{{ xray_port }}?type=grpc&serviceName=api.v1.telemetry.EventStream&mode=gun&security=reality&pbk={{ x25519_pbk.stdout }}&fp=firefox&sni={{ domain }}&sid={{ short_id.stdout }}&encryption=none#%F0%9F%87%A9%F0%9F%87%AA%20{{ domain }}"
+    msg: "vless://{{ xray_uuid.stdout }}@{{ domain }}:{{ xray_port }}?type=grpc&serviceName=api.v1.telemetry.EventStream&mode=gun&security=reality&pbk={{ x25519_pbk.stdout }}&fp=firefox&sni={{ domain }}&sid={{ short_id.stdout }}&encryption=none#%F0%9F%8F%B4%E2%80%8D%E2%98%A0%EF%B8%8F%20{{ domain }}"
 - name: XRay outbound config
   debug:
     msg: |

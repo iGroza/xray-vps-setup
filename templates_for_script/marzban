@@ -42,7 +42,7 @@ HOME_PAGE_TEMPLATE="home/index.html"
 # USE_CUSTOM_JSON_FOR_STREISAND=False
 
 ## Set headers for subscription
-SUB_PROFILE_TITLE = "🇩🇪 $VLESS_DOMAIN"
+SUB_PROFILE_TITLE = "🏴‍☠️ $VLESS_DOMAIN"
 # SUB_SUPPORT_URL = "https://t.me/support"
 # SUB_UPDATE_INTERVAL = "12"
 

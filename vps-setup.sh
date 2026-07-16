@@ -59,9 +59,9 @@ else
   fi
 fi
 
-# URL-encoded remark for the share link: "🇩🇪 <domain>"
-# (%F0%9F%87%A9%F0%9F%87%AA is the 🇩🇪 emoji, %20 space)
-export XRAY_REMARK_ENC="%F0%9F%87%A9%F0%9F%87%AA%20$VLESS_DOMAIN"
+# URL-encoded remark for the share link: "🏴‍☠️ <domain>"
+# (%F0%9F%8F%B4%E2%80%8D%E2%98%A0%EF%B8%8F is the 🏴‍☠️ emoji, %20 space)
+export XRAY_REMARK_ENC="%F0%9F%8F%B4%E2%80%8D%E2%98%A0%EF%B8%8F%20$VLESS_DOMAIN"
 
 read -ep "Do you want to install marzban? [y/N] "$'\n' marzban_input
 
@@ -321,7 +321,7 @@ end_script() {
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
 
-    # Default config name shown in client apps: "🇩🇪 <domain> | <marzban username>".
+    # Default config name shown in client apps: "🏴‍☠️ <domain> | <marzban username>".
     # Marzban creates the default host ("🚀 Marz ({USERNAME}) ...") on first start,
     # rename it once the row appears, then restart so the in-memory hosts reload.
     cat > /opt/xray-vps-setup/marzban_lib/set_default_host.py <<'PYEOF'
@@ -343,7 +343,7 @@ PYEOF
     echo "Waiting for Marzban to create the default host..."
     REMARK_SET=0
     for _ in $(seq 1 60); do
-      REMARK_SET=$(docker exec marzban python3 /var/lib/marzban/set_default_host.py "🇩🇪 $VLESS_DOMAIN | {USERNAME}" 2>/dev/null || echo 0)
+      REMARK_SET=$(docker exec marzban python3 /var/lib/marzban/set_default_host.py "🏴‍☠️ $VLESS_DOMAIN | {USERNAME}" 2>/dev/null || echo 0)
       if [ "$REMARK_SET" = "1" ]; then break; fi
       sleep 2
     done
