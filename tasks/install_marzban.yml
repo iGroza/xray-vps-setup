@@ -17,6 +17,20 @@
     - /opt/xray-vps-setup/caddy
     - /opt/xray-vps-setup/marzban
     - /opt/xray-vps-setup/marzban/templates/home
+    - /opt/xray-vps-setup/marzban_lib/xray-core
+# Marzban's image bundles an older Xray core; extract the pinned xray_version binary
+# into its volume so XRAY_EXECUTABLE_PATH (set in marzban/.env) runs it instead.
+- name: Extract pinned Xray core into marzban volume
+  shell:
+    cmd: >
+      CID=$(docker create ghcr.io/xtls/xray-core:{{ xray_version }}) &&
+      docker cp $CID:/usr/local/bin/xray /opt/xray-vps-setup/marzban_lib/xray-core/xray &&
+      docker rm $CID
+    creates: /opt/xray-vps-setup/marzban_lib/xray-core/xray
+- name: Make Xray binary executable
+  file:
+    path: /opt/xray-vps-setup/marzban_lib/xray-core/xray
+    mode: "0755"
 - name: Copy config files
   ansible.builtin.template:
     src: "{{ item.src }}"

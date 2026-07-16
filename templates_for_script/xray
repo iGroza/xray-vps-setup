@@ -4,40 +4,34 @@
   },
   "inbounds": [
     {
-      "tag": "VLESS TCP VISION REALITY",
+      "tag": "VLESS gRPC REALITY",
       "listen": "0.0.0.0",
       "port": $XRAY_PORT,
       "protocol": "vless",
       "settings": {
         "clients": [
           {
-            "id": "$XRAY_UUID",
-            "flow": "xtls-rprx-vision"
+            "id": "$XRAY_UUID"
           }
         ],
-        "decryption": "none",
-        "fallbacks": [
-          {
-            "dest": "127.0.0.1:4123",
-            "xver": 0
-          }
-        ]
+        "decryption": "none"
       },
       "streamSettings": {
-        "network": "tcp",
+        "network": "grpc",
         "security": "reality",
-        "tcpSettings": {
-          "header": {
-            "type": "none"
-          }
+        "grpcSettings": {
+          "serviceName": "api.v1.telemetry.EventStream",
+          "multiMode": false
         },
         "realitySettings": {
+          "show": false,
           "xver": 0,
           "dest": "127.0.0.1:4123",
           "serverNames": [
             "$VLESS_DOMAIN"
           ],
           "privateKey": "$XRAY_PIK",
+          "publicKey": "$XRAY_PBK",
           "shortIds": [
             "$XRAY_SID"
           ]

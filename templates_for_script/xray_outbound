@@ -9,22 +9,25 @@
         "users": [
           {
             "id": "$XRAY_UUID",
-            "encryption": "none",
-            "flow": "xtls-rprx-vision"
+            "encryption": "none"
           }
         ]
       }
     ]
   },
   "streamSettings": {
-    "network": "tcp",
+    "network": "grpc",
     "security": "reality",
+    "grpcSettings": {
+      "serviceName": "api.v1.telemetry.EventStream",
+      "multiMode": false
+    },
     "realitySettings": {
       "serverName": "$VLESS_DOMAIN",
-      "fingerprint": "chrome",
+      "fingerprint": "firefox",
       "publicKey": "$XRAY_PBK",
       "shortId": "$XRAY_SID",
-      "spiderX": "/"
+      "spiderX": ""
     }
   }
 }

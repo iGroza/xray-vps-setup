@@ -1,6 +1,6 @@
 - name: Print clipboard string
   debug:
-    msg: "vless://{{ xray_uuid.stdout }}@{{ domain }}:{{ xray_port }}?type=tcp&security=reality&pbk={{ x25519_pbk.stdout }}&fp=chrome&sni={{ domain }}&sid={{ short_id.stdout }}&spx=%2F&flow=xtls-rprx-vision#%F0%9F%87%A9%F0%9F%87%AA%20{{ domain }}"
+    msg: "vless://{{ xray_uuid.stdout }}@{{ domain }}:{{ xray_port }}?type=grpc&serviceName=api.v1.telemetry.EventStream&mode=gun&security=reality&pbk={{ x25519_pbk.stdout }}&fp=firefox&sni={{ domain }}&sid={{ short_id.stdout }}&encryption=none#%F0%9F%87%A9%F0%9F%87%AA%20{{ domain }}"
 - name: XRay outbound config
   debug:
     msg: |
@@ -15,22 +15,25 @@
                   "users": [
                     {
                       "id": "{{ xray_uuid.stdout }}",
-                      "encryption": "none",
-                      "flow": "xtls-rprx-vision"
+                      "encryption": "none"
                     }
                   ]
                 }
               ]
             },
             "streamSettings": {
-              "network": "tcp",
+              "network": "grpc",
               "security": "reality",
+              "grpcSettings": {
+                "serviceName": "api.v1.telemetry.EventStream",
+                "multiMode": false
+              },
               "realitySettings": {
                 "serverName": "{{ domain }}",
-                "fingerprint": "chrome",
+                "fingerprint": "firefox",
                 "publicKey": "{{ x25519_pbk.stdout }}",
                 "shortId": "{{ short_id.stdout }}",
-                "spiderX": "/"
+                "spiderX": ""
               }
             }
           }
@@ -42,20 +45,23 @@
               "server": "{{ domain }}",
               "server_port": {{ xray_port }},
               "uuid": "{{ xray_uuid.stdout }}",
-              "flow": "xtls-rprx-vision",
               "tls": {
                   "enabled": true,
                   "insecure": false,
                   "server_name": "{{ domain }}",
                   "utls": {
                       "enabled": true,
-                      "fingerprint": "chrome"
+                      "fingerprint": "firefox"
                   },
                   "reality": {
                       "enabled": true,
                       "public_key": "{{ x25519_pbk.stdout }}",
                       "short_id": "{{ short_id.stdout }}"
                   }
+              },
+              "transport": {
+                  "type": "grpc",
+                  "service_name": "api.v1.telemetry.EventStream"
               }
           }
 - name: Print PBK, SID and UUID to connect to server.

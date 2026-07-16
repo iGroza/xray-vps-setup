@@ -15,7 +15,7 @@
           if cur.fetchone()[0]:
               print(1)
           else:
-              cur.execute("UPDATE hosts SET remark = ? WHERE remark LIKE '%Marz%'", (remark,))
+              cur.execute("UPDATE hosts SET remark = ?, fingerprint = 'firefox' WHERE remark LIKE '%Marz%'", (remark,))
               con.commit()
               print(1 if cur.rowcount else 0)
       except sqlite3.OperationalError:

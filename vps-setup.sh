@@ -201,6 +201,15 @@ xray_setup() {
     export CADDY_REVERSE="reverse_proxy * unix//run/marzban/marzban.socket"
     wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/caddy" | envsubst > ./caddy/Caddyfile
     wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray" | envsubst > ./marzban/xray_config.json
+    # Marzban's image bundles an older Xray core; extract the pinned $XRAY_VERSION
+    # binary into its volume and point XRAY_EXECUTABLE_PATH (in marzban/.env) at it.
+    # Reality config carries an explicit publicKey so Marzban never parses `xray x25519`
+    # output (its v0.8.4 parser breaks on the newer "Password (PublicKey)" format).
+    mkdir -p /opt/xray-vps-setup/marzban_lib/xray-core
+    XRAY_CID=$(docker create ghcr.io/xtls/xray-core:$XRAY_VERSION)
+    docker cp $XRAY_CID:/usr/local/bin/xray /opt/xray-vps-setup/marzban_lib/xray-core/xray
+    docker rm $XRAY_CID > /dev/null
+    chmod +x /opt/xray-vps-setup/marzban_lib/xray-core/xray
   else
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/compose | envsubst > ./docker-compose.yml
     mkdir -p /opt/xray-vps-setup/caddy/templates
@@ -325,7 +334,7 @@ try:
     if cur.fetchone()[0]:
         print(1)
     else:
-        cur.execute("UPDATE hosts SET remark = ? WHERE remark LIKE '%Marz%'", (remark,))
+        cur.execute("UPDATE hosts SET remark = ?, fingerprint = 'firefox' WHERE remark LIKE '%Marz%'", (remark,))
         con.commit()
         print(1 if cur.rowcount else 0)
 except sqlite3.OperationalError:
@@ -360,7 +369,7 @@ Password: $MARZBAN_PASS
     singbox_config=$(wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/sing_box_outbound" | envsubst)
 
     final_msg="Clipboard string format:
-vless://$XRAY_UUID@$VLESS_DOMAIN:$XRAY_PORT?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision#$XRAY_REMARK_ENC
+vless://$XRAY_UUID@$VLESS_DOMAIN:$XRAY_PORT?type=grpc&serviceName=api.v1.telemetry.EventStream&mode=gun&security=reality&pbk=$XRAY_PBK&fp=firefox&sni=$VLESS_DOMAIN&sid=$XRAY_SID&encryption=none#$XRAY_REMARK_ENC
 
 XRay outbound config:
 $xray_config
