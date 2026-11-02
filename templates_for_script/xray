@@ -25,7 +25,7 @@
         },
         "realitySettings": {
           "show": false,
-          "xver": 0,
+          "xver": 1,
           "dest": "127.0.0.1:4123",
           "serverNames": [
             "$VLESS_DOMAIN"
@@ -33,7 +33,7 @@
           "privateKey": "$XRAY_PIK",
           "publicKey": "$XRAY_PBK",
           "shortIds": [
-            "$XRAY_SID"
+            ""
           ]
         }
       }

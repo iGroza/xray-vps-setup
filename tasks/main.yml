@@ -1,6 +1,13 @@
 ---
 - name: Populate service facts
   ansible.builtin.service_facts:
+- name: Get the current SSH listening port
+  shell: "ss -tlnp | grep sshd | grep -Po '(?<=:)\\d+(?= )' | head -n 1"
+  register: ssh_port_output
+  changed_when: false
+- name: Set SSH_PORT variable
+  set_fact:
+    SSH_PORT: "{{ ssh_port_output.stdout | default('22') | trim }}"
 - name: Enable BBR
   include_tasks: bbr.yml
 - name: Install docker
@@ -8,15 +15,6 @@
   when: ansible_facts.services['docker'] is undefined
 - name: Install/update yq
   include_tasks: install_yq.yml
-- name: Security block
-  block:
-    - name: Edit SSHD config
-      include_tasks: ssh.yml
-    - name: Edit iptables
-      include_tasks: iptables.yml
-    - name: Add user
-      include_tasks: user.yml
-  when: configure_security|default(false)|bool == true
 - name: Generate values
   block:
     # xray >= 25.4.30 prints "PrivateKey:", newer builds print "Password (PublicKey):"

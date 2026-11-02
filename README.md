@@ -4,11 +4,10 @@
 
 Fork includes:
 
-- Changed port from `443` to `433` to avoid Russian blocks
-- Set `xver` to `0`
-- Replaced `sniffing` with `fallbacks`
-- Enabled Telegram bot for Marzban
-- Xray-core pinned to `26.6.27`, key generation uses the same pinned image
+- Xray listens on `433` by default (configurable at install time, `443` works too) to dodge port-based RU blocks
+- VLESS-gRPC-REALITY transport instead of TCP-Vision, `firefox` uTLS fingerprint
+- Telegram bot for Marzban (token + admin id asked at install time)
+- Xray-core pinned to `26.6.27` for both the standalone container and the Marzban core
 - Default client config name: `🏴‍☠️ <domain> | <marzban username>` (Marzban) / `🏴‍☠️ <domain>` (plain xray)
 - Tested on [cherryservers.com](https://www.cherryservers.com/pricing/virtual-servers) (Ubuntu 22.04)
 
@@ -19,17 +18,18 @@ Fork includes:
 
 VLESS со своим доменом. А что еще нужно для счастья?  
 
-В данном варианте VLESS слушает на 433 и принимате все запросы, делая запрос на локальный Caddy только для сертификатов. В таком варианте задержка будет меньше, чем в варианте с Caddy/NGINX перед VLESS, где происходит множество лишних запросов.
+> [!IMPORTANT]
+> Дайте секс
 
+В данном варианте VLESS слушает на 433 (или выбранном порту) и принимате все запросы, делая запрос на локальный Angie(форк nginx) только для сертификатов. В таком варианте задержка будет меньше, чем в варианте с Caddy/NGINX перед VLESS, где происходит множество лишних запросов. 
 ## Скрипт
 
 - Установит Xray/Marzban на ваш выбор. Для маскировки страницы используется [Conflunce](https://github.com/Jolymmiles/confluence-marzban-home)
 - На ваше усмотрение настроит:
-- - Iptables, запретив все подключения, кроме SSH, 80 и 433.
+- - Iptables, запретив все подключения, кроме SSH, 80 и порта Xray.
 - - Создаст пользователя для подключения, запретив вход от рута
 - - Добавит этому пользователю ключ для SSH, запретив вход по паролю
-- Настроит WARP для ру-сайтов.  
-
+- - Настроит WARP для ру-сайтов.  
 ```bash
 tmux
 bash <(wget -qO- https://raw.githubusercontent.com/iGroza/xray-vps-setup/refs/heads/main/vps-setup.sh)
@@ -38,7 +38,6 @@ bash <(wget -qO- https://raw.githubusercontent.com/iGroza/xray-vps-setup/refs/he
 ## Плейбук
 
 [Ansible-galaxy](https://galaxy.ansible.com/ui/standalone/roles/Akiyamov/xray-vps-setup/install/)
-
 ```yaml
 - name: Setup vps 
   hosts: some_host
@@ -48,13 +47,10 @@ bash <(wget -qO- https://raw.githubusercontent.com/iGroza/xray-vps-setup/refs/he
     domain: example.com # домен, уровень неважен
     setup_variant: marzban # marzban or xray
     setup_warp: false # true or false
-    configure_security: true # true or false
-    user_to_create: xray_user # если configure_security: true, то обязательно
-    user_password: "xray_password" # если configure_security: true, то обязательно
-    SSH_PORT: 22 # если configure_security: true, то обязательно
-    ssh_public_key: "" # если configure_security: true, то обязательно
     xray_port: 433 # опционально, порт VLESS Reality (дефолт 433)
-    xray_version: "26.6.27" # опционально, тег образа ghcr.io/xtls/xray-core
+    xray_version: "26.6.27" # опционально, версия Xray-core
+    TELEGRAM_API_TOKEN: "" # опционально, токен бота для Marzban
+    TELEGRAM_ADMIN_ID: "" # опционально, telegram id админа
 ```
 
 ## Добавляем подписку и поддержку Mihomo
@@ -69,16 +65,12 @@ bash <(wget -qO- https://github.com/legiz-ru/marz-sub/raw/main/marz-sub.sh)
 
 Описана [здесь](https://github.com/Akiyamov/xray-vps-setup/blob/main/install_in_docker.md).  
 
-## Почему не nginx, haproxy, 3x-ui, x-ui, sing-box
+## Почему не <strike>nginx</strike>caddy, haproxy, 3x-ui, x-ui, sing-box...
 
-Caddy сам получит сертификаты, поэтому нам не придется их получать через `acme.sh` или `certbot`.  
+<strike>Caddy</strike> Angie сам получит сертификаты, поэтому нам не придется их получать через `acme.sh` или `certbot`.  
 3X-ui мерзотная панель.  
 Sing-box не очень.  
-XHTTP позже, а больше не надо. Уже точно.
+XHTTP позже, а больше не надо. Уже точно. 
 
 ## Связь
-
 Issues, PR ну или мой [тг](https://t.me/Akiyamov).
-
-> [!IMPORTANT]
-> Дайте секс
