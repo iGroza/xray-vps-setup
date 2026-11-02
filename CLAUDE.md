@@ -11,7 +11,7 @@ There are **two parallel installation paths that implement the same setup and mu
 1. **`vps-setup.sh`** — interactive bash bootstrap script users run as root on the VPS. It renders templates from `templates_for_script/` with `envsubst` (shell `$VAR` syntax).
 2. **Ansible role** (standard Galaxy layout: `tasks/`, `templates/`, `handlers/`, `defaults/`, `vars/`, `meta/`) — published as `Akiyamov.xray-vps-setup`. It renders Jinja2 templates from `templates/*.j2`.
 
-When changing generated config (Xray config, Caddyfile, docker-compose, Marzban env), the same change usually needs to land in **both** template directories, in their respective syntaxes.
+When changing generated config (Xray config, angie.conf, docker-compose, Marzban env), the same change usually needs to land in **both** template directories, in their respective syntaxes.
 
 ## Critical: the script fetches templates from GitHub, not disk
 
