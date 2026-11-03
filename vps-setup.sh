@@ -224,6 +224,23 @@ if [[ "$INSTALL_MODE" != "node" ]]; then
   fi
 fi
 
+# Label each config link (remark + transport + port) in the Telegram bot's "Links"
+# message and QR captions. Patches admin.py from the pinned image and bind-mounts it.
+marzban_bot_patch() {
+  wget -qO /opt/xray-vps-setup/marzban/marzban_bot_patch.py \
+    "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/marzban_bot_patch.py"
+  MARZBAN_CID=$(docker create gozargah/marzban:v0.8.4)
+  docker cp "$MARZBAN_CID:/code/app/telegram/handlers/admin.py" /opt/xray-vps-setup/marzban/tg_admin.orig.py
+  docker rm "$MARZBAN_CID" > /dev/null
+  if python3 -I /opt/xray-vps-setup/marzban/marzban_bot_patch.py \
+       /opt/xray-vps-setup/marzban/tg_admin.orig.py /opt/xray-vps-setup/marzban/tg_admin.py; then
+    rm -f /opt/xray-vps-setup/marzban/tg_admin.orig.py
+  else
+    echo "Warning: Telegram bot patch failed, bot will show unlabelled links"
+    mv /opt/xray-vps-setup/marzban/tg_admin.orig.py /opt/xray-vps-setup/marzban/tg_admin.py
+  fi
+}
+
 # Install marzban
 xray_setup() {
   mkdir -p /opt/xray-vps-setup
@@ -242,6 +259,7 @@ xray_setup() {
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/marzban | envsubst > ./marzban/.env
     wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/angie-marzban" | envsubst '$VLESS_DOMAIN $XRAY_PORT_SUFFIX $MARZBAN_SUB_PATH' > ./angie.conf
     wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray" | envsubst > ./marzban/xray_config.json
+    marzban_bot_patch
   else
     mkdir -p /opt/xray-vps-setup/xray
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/compose-xray | envsubst > ./docker-compose.yml

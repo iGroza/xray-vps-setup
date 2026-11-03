@@ -21,6 +21,7 @@ services:
       - ./xray-core:/code/xray-core
       - ./marzban_lib:/var/lib/marzban
       - ./marzban/templates:/var/lib/marzban/templates
+      - ./marzban/tg_admin.py:/code/app/telegram/handlers/admin.py
 
 volumes:
   angie-data:
