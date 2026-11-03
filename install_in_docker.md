@@ -1,7 +1,7 @@
 <h1 align="center">VLESS + Reality Self Steal в Docker</h2>
 
 > [!NOTE]
-> Форк: Xray слушает на `433` (а не 443), транспорт VLESS-gRPC-REALITY, ядро пинится на `26.6.27`. Ниже приведён оригинальный вариант с TCP-Vision на 443; для варианта форка возьмите inbound из `templates_for_script/xray` и замените 443 на свой порт в iptables.
+> Форк: два inbound — VLESS-XHTTP-REALITY на `443` и VLESS-TCP-Vision-REALITY на `8443`, fingerprint `firefox`, ядро пинится на `26.10.31`, Marzban на `v0.8.4`. Ниже приведён оригинальный вариант с одним TCP-Vision на 443; для варианта форка возьмите `templates_for_script/xray` целиком и дополнительно откройте 8443 в iptables.
 
 ### Что потребуется:
 - VPS 
@@ -85,7 +85,7 @@ sudo usermod -aG docker $USER
 ### Получение данных для прокси
 В этой части будут описаны необходимые данные, а также способ их получения. Позже эти данные будут использованы в конфигурации.  
 - __VLESS_DOMAIN__: Ваш домен. Если используется punycode, то далее используется ТОЛЬКО на латинице.  
-- __XRAY_PBK+PIK__: `docker run --rm ghcr.io/xtls/xray-core:26.6.27 x25519`
+- __XRAY_PBK+PIK__: `docker run --rm ghcr.io/xtls/xray-core:26.10.31 x25519`
 Оба значения для нас важны: `PrivateKey` = PIK, `Password (PublicKey)` = PBK.  
 - __XRAY_SID__: ``
 Short id, а не генерируем его. Рудимент, который не особо нужен.    

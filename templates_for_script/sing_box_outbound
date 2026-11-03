@@ -1,8 +1,9 @@
 {
     "type": "vless",
     "server": "$VLESS_DOMAIN",
-    "server_port": $XRAY_PORT,
+    "server_port": $VISION_PORT,
     "uuid": "$XRAY_UUID",
+    "flow": "xtls-rprx-vision",
     "tls": {
         "enabled": true,
         "insecure": false,
@@ -16,9 +17,5 @@
             "public_key": "$XRAY_PBK",
             "short_id": "$XRAY_SID"
         }
-    },
-    "transport": {
-        "type": "grpc",
-        "service_name": "api.v1.telemetry.EventStream"
     }
 }

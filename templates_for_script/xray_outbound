@@ -2,32 +2,24 @@
   "tag": "default",
   "protocol": "vless",
   "settings": {
-    "vnext": [
-      {
-        "address": "$VLESS_DOMAIN",
-        "port": $XRAY_PORT,
-        "users": [
-          {
-            "id": "$XRAY_UUID",
-            "encryption": "none"
-          }
-        ]
-      }
-    ]
+    "address": "$VLESS_DOMAIN",
+    "port": $XRAY_PORT,
+    "id": "$XRAY_UUID",
+    "encryption": "none"
   },
   "streamSettings": {
-    "network": "grpc",
+    "network": "xhttp",
     "security": "reality",
-    "grpcSettings": {
-      "serviceName": "api.v1.telemetry.EventStream",
-      "multiMode": false
+    "xhttpSettings": {
+      "path": "/$XHTTP_PATH",
+      "mode": "stream-one"
     },
     "realitySettings": {
       "serverName": "$VLESS_DOMAIN",
       "fingerprint": "firefox",
       "publicKey": "$XRAY_PBK",
       "shortId": "$XRAY_SID",
-      "spiderX": ""
+      "spiderX": "/"
     }
   }
 }

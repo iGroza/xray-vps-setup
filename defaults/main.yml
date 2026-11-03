@@ -1,6 +1,0 @@
----
-# defaults file for vps-setup
-xray_version: "26.6.27"
-xray_port: 433
-TELEGRAM_API_TOKEN: ""
-TELEGRAM_ADMIN_ID: ""

@@ -4,7 +4,7 @@ set -e
 
 export GIT_BRANCH="main"
 export GIT_REPO="igroza/xray-vps-setup"
-export XRAY_VERSION="26.6.27"
+export XRAY_VERSION="26.10.31"
 
 # Check if script started as root
 if [ "$EUID" -ne 0 ]
@@ -104,19 +104,27 @@ if [[ "$INSTALL_MODE" == "marzban" ]]; then
   fi
 fi
 
-# Custom xray port (80 is ACME/redirect, 4123 is the local Angie fallback)
-read -ep "Enter xray port. Default 433, can't use ports: 80 and 4123:"$'\n' input_xray_port
-while [[ -n "$input_xray_port" && ( "$input_xray_port" -eq "80" || "$input_xray_port" -eq "4123" ) ]]; do
+# Xray ports: XHTTP+REALITY on $XRAY_PORT (443 recommended: xray-core >= 26.3.27 warns that
+# non-443 REALITY ports get the IP blocked easily), TCP+Vision+REALITY on $VISION_PORT.
+# 80 is Angie's ACME/redirect listener, 4123 the local Angie REALITY target.
+export VISION_PORT=8443
+read -ep "Enter xray port. Default 443, can't use ports: 80, 4123 and $VISION_PORT:"$'\n' input_xray_port
+while [[ -n "$input_xray_port" && ( "$input_xray_port" -eq "80" || "$input_xray_port" -eq "4123" || "$input_xray_port" -eq "$VISION_PORT" ) ]]; do
   read -ep "No, xray can't use $input_xray_port as port, write again:"$'\n' input_xray_port
 done
-export XRAY_PORT=${input_xray_port:-433}
+export XRAY_PORT=${input_xray_port:-443}
+# ":port" for URLs when not on 443
+export XRAY_PORT_SUFFIX=""
+if [[ "$XRAY_PORT" != "443" ]]; then
+  export XRAY_PORT_SUFFIX=":$XRAY_PORT"
+fi
 
 read -ep "Do you want to create a user to connect to server as non-root and forbid root access? Do this on first run only. [y/N] "$'\n' configure_ssh_input
 if [[ ${configure_ssh_input,,} == "y" ]]; then
   # Read SSH port
-  read -ep "Enter SSH port. Default 22, can't use ports: 80, $XRAY_PORT and 4123:"$'\n' input_ssh_port
+  read -ep "Enter SSH port. Default 22, can't use ports: 80, $XRAY_PORT, $VISION_PORT and 4123:"$'\n' input_ssh_port
 
-  while [[ -n "$input_ssh_port" && ( "$input_ssh_port" -eq "80" || "$input_ssh_port" -eq "$XRAY_PORT" || "$input_ssh_port" -eq "4123" ) ]]; do
+  while [[ -n "$input_ssh_port" && ( "$input_ssh_port" -eq "80" || "$input_ssh_port" -eq "$XRAY_PORT" || "$input_ssh_port" -eq "$VISION_PORT" || "$input_ssh_port" -eq "4123" ) ]]; do
     read -ep "No, ssh can't use $input_ssh_port as port, write again:"$'\n' input_ssh_port
   done
   # Read SSH Pubkey
@@ -203,7 +211,11 @@ if [[ "$INSTALL_MODE" != "node" ]]; then
   # instead of "Public key:", so match by label and take the last field
   export XRAY_PIK=$(docker run --rm ghcr.io/xtls/xray-core:$XRAY_VERSION x25519 | grep -i '^PrivateKey' | awk '{print $NF}')
   export XRAY_PBK=$(docker run --rm ghcr.io/xtls/xray-core:$XRAY_VERSION x25519 -i $XRAY_PIK | grep -iE '^(Password|Public key)' | awk '{print $NF}')
+  # several shortIds so different clients don't share one; Marzban picks one per link
   export XRAY_SID=$(openssl rand -hex 8)
+  export XRAY_SID2=$(openssl rand -hex 4)
+  export XRAY_SID3=$(openssl rand -hex 6)
+  export XHTTP_PATH=$(openssl rand -hex 8)
   export XRAY_UUID=$(docker run --rm ghcr.io/xtls/xray-core:$XRAY_VERSION uuid)
 
   if [[ -z "$XRAY_PIK" || -z "$XRAY_PBK" || -z "$XRAY_UUID" ]]; then
@@ -228,13 +240,13 @@ xray_setup() {
     xray_core_download /opt/xray-vps-setup/xray-core
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/compose-marzban | envsubst > ./docker-compose.yml
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/marzban | envsubst > ./marzban/.env
-    wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/angie-marzban" | envsubst '$VLESS_DOMAIN $XRAY_PORT $MARZBAN_PATH $MARZBAN_SUB_PATH' > ./angie.conf
+    wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/angie-marzban" | envsubst '$VLESS_DOMAIN $XRAY_PORT_SUFFIX $MARZBAN_SUB_PATH' > ./angie.conf
     wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray" | envsubst > ./marzban/xray_config.json
   else
     mkdir -p /opt/xray-vps-setup/xray
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/compose-xray | envsubst > ./docker-compose.yml
     wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray" | envsubst > ./xray/config.json
-    wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/angie" | envsubst '$VLESS_DOMAIN $XRAY_PORT' > ./angie.conf
+    wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/angie" | envsubst '$VLESS_DOMAIN $XRAY_PORT_SUFFIX' > ./angie.conf
   fi
 }
 
@@ -246,7 +258,7 @@ node_setup() {
   # Placeholder - will be replaced with panel cert by node_api_setup
   touch ./ssl_client_cert.pem
   wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/compose-node" | envsubst > ./docker-compose.yml
-  wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/angie" | envsubst '$VLESS_DOMAIN $XRAY_PORT' > ./angie.conf
+  wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/angie" | envsubst '$VLESS_DOMAIN $XRAY_PORT_SUFFIX' > ./angie.conf
 }
 
 node_api_setup() {
@@ -454,6 +466,7 @@ edit_iptables() {
   iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport $SSH_PORT -j ACCEPT
   iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
   iptables -A INPUT -p tcp -m tcp --dport $XRAY_PORT -j ACCEPT
+  iptables -A INPUT -p tcp -m tcp --dport $VISION_PORT -j ACCEPT
   iptables -A INPUT -i lo -j ACCEPT
   iptables -A OUTPUT -o lo -j ACCEPT
   iptables -P INPUT DROP
@@ -502,9 +515,24 @@ warp_install() {
   fi
 }
 
+block_ru_routing() {
+  if [[ "${marzban_input,,}" == "y" ]]; then
+    local cfg="/opt/xray-vps-setup/marzban/xray_config.json"
+  else
+    local cfg="/opt/xray-vps-setup/xray/config.json"
+  fi
+  yq eval \
+  '.routing.rules += {"outboundTag": "block", "ip": ["geoip:ru"], "domain": ["geosite:category-ru", "regexp:.*\\.ru$", "regexp:.*\\.su$", "regexp:.*\\.xn--p1ai$"]}' \
+  -i "$cfg"
+}
+
 end_script() {
-  if [[ ${configure_warp_input,,} == "y" ]]; then
-    warp_install
+  if [[ "$INSTALL_MODE" != "node" ]]; then
+    if [[ ${configure_warp_input,,} == "y" ]]; then
+      warp_install
+    else
+      block_ru_routing
+    fi
   fi
 
   if [[ "$INSTALL_MODE" == "node" ]]; then
@@ -516,8 +544,12 @@ end_script() {
   if [[ "$INSTALL_MODE" == "marzban" ]]; then
     echo "Waiting for marzban to start..."
     sleep 5
-    docker exec marzban marzban-cli admin import-from-env \
-      || echo "Warning: admin import failed - run 'docker exec marzban marzban-cli admin import-from-env' manually"
+    if docker exec marzban marzban-cli admin import-from-env; then
+      # admin now lives in the DB; Marzban itself discourages keeping SUDO_* in .env
+      sed -i '/^SUDO_USERNAME\|^SUDO_PASSWORD/d' /opt/xray-vps-setup/marzban/.env
+    else
+      echo "Warning: admin import failed - run 'docker exec marzban marzban-cli admin import-from-env' manually"
+    fi
 
     # Marzban creates the default host ("🚀 Marz ({USERNAME}) ...") with address {SERVER_IP};
     # point it at the domain and name it "🏴‍☠️ <domain> | <marzban username>".
@@ -545,12 +577,15 @@ import json, os
 with open('/tmp/panel_hosts.json') as f:
     hosts = json.load(f)
 domain = os.environ['PANEL_HOST_DOMAIN']
-for host_list in hosts.values():
+for tag, host_list in hosts.items():
     for host in host_list:
-        host['remark'] = f'🏴‍☠️ {domain} | {{USERNAME}}'
+        # XHTTP host first in the subscription (resilience), Vision marked ⚡ (speed)
+        suffix = ' ⚡' if 'VISION' in tag.upper() else ''
+        host['remark'] = f'🏴‍☠️ {domain}{suffix} | {{USERNAME}}'
         host['address'] = domain
         host['sni'] = domain
         host['fingerprint'] = 'firefox'
+        host['mux_enable'] = False
 print(json.dumps(hosts))
 PYEOF
         curl -s -o /dev/null \
@@ -576,21 +611,26 @@ Panel: https://$PANEL_DOMAIN
 Node service port: 62001
     "
   elif [[ "${marzban_input,,}" == "y" ]]; then
-    final_msg="Marzban panel location: https://$VLESS_DOMAIN:$XRAY_PORT/$MARZBAN_PATH/
+    final_msg="Marzban is managed through the Telegram bot. The web dashboard is NOT exposed to the internet;
+to open it, tunnel: ssh -L 8000:127.0.0.1:8000 <user>@$VLESS_DOMAIN  then visit http://127.0.0.1:8000/$MARZBAN_PATH/
 User: $MARZBAN_USER
 Password: $MARZBAN_PASS
+Subscription base: https://$VLESS_DOMAIN$XRAY_PORT_SUFFIX/$MARZBAN_SUB_PATH/
     "
   else
     xray_config=$(wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray_outbound" | envsubst)
     singbox_config=$(wget -qO- "https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/sing_box_outbound" | envsubst)
 
-    final_msg="Clipboard string format:
-vless://$XRAY_UUID@$VLESS_DOMAIN:$XRAY_PORT?type=grpc&serviceName=api.v1.telemetry.EventStream&mode=gun&security=reality&pbk=$XRAY_PBK&fp=firefox&sni=$VLESS_DOMAIN&sid=$XRAY_SID&encryption=none#$XRAY_REMARK_ENC
+    final_msg="Clipboard string format (XHTTP + REALITY, primary):
+vless://$XRAY_UUID@$VLESS_DOMAIN:$XRAY_PORT?type=xhttp&path=%2F$XHTTP_PATH&mode=stream-one&security=reality&pbk=$XRAY_PBK&fp=firefox&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&encryption=none#$XRAY_REMARK_ENC
 
-XRay outbound config:
+Clipboard string format (TCP + Vision + REALITY, fastest):
+vless://$XRAY_UUID@$VLESS_DOMAIN:$VISION_PORT?type=tcp&security=reality&pbk=$XRAY_PBK&fp=firefox&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision&encryption=none#$XRAY_REMARK_ENC%20%E2%9A%A1
+
+XRay outbound config (XHTTP):
 $xray_config
 
-Sing-box outbound config:
+Sing-box outbound config (Vision; sing-box has no XHTTP):
 $singbox_config
 
 Plain data:

@@ -9,9 +9,11 @@ services:
       - ./angie.conf:/etc/angie/angie.conf
       - ./index.html:/tmp/index.html
   marzban:
-    image: gozargah/marzban:latest
+    image: gozargah/marzban:v0.8.4
     container_name: marzban
     restart: always
+    depends_on:
+      - angie
     env_file: ./marzban/.env
     network_mode: host
     volumes:

@@ -14,7 +14,7 @@ http {
     server {
         listen 80;
         listen [::]:80;
-        return 301 https://$host:$XRAY_PORT$request_uri;
+        return 301 https://$host$XRAY_PORT_SUFFIX$request_uri;
     }
 
     resolver 1.1.1.1;
@@ -54,7 +54,9 @@ http {
         resolver                   1.1.1.1 valid=60s;
         resolver_timeout           2s;
 
-        location ~* /($MARZBAN_PATH|statics|$MARZBAN_SUB_PATH|api|docs|redoc|openapi.json) {
+        # Only the subscription endpoint is public. Dashboard/API stay on 127.0.0.1:8000
+        # (reach them over an SSH tunnel), the Telegram bot talks to Marzban in-process.
+        location ~* ^/($MARZBAN_SUB_PATH|statics)(/|$) {
             proxy_pass http://127.0.0.1:8000;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;

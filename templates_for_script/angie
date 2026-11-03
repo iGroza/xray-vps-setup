@@ -14,7 +14,7 @@ http {
     server {
         listen 80;
         listen [::]:80;
-        return 301 https://$host:$XRAY_PORT$request_uri;
+        return 301 https://$host$XRAY_PORT_SUFFIX$request_uri;
     }
 
     resolver 1.1.1.1;

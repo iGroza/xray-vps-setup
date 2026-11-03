@@ -4,38 +4,94 @@
   },
   "inbounds": [
     {
-      "tag": "VLESS gRPC REALITY",
+      "tag": "VLESS XHTTP REALITY",
       "listen": "0.0.0.0",
       "port": $XRAY_PORT,
       "protocol": "vless",
       "settings": {
         "clients": [
           {
-            "id": "$XRAY_UUID"
+            "id": "$XRAY_UUID",
+            "email": "default"
           }
         ],
         "decryption": "none"
       },
       "streamSettings": {
-        "network": "grpc",
+        "network": "xhttp",
         "security": "reality",
-        "grpcSettings": {
-          "serviceName": "api.v1.telemetry.EventStream",
-          "multiMode": false
+        "xhttpSettings": {
+          "path": "/$XHTTP_PATH",
+          "mode": "stream-one"
         },
         "realitySettings": {
           "show": false,
           "xver": 1,
-          "dest": "127.0.0.1:4123",
+          "target": "127.0.0.1:4123",
           "serverNames": [
             "$VLESS_DOMAIN"
           ],
           "privateKey": "$XRAY_PIK",
           "publicKey": "$XRAY_PBK",
           "shortIds": [
-            ""
+            "$XRAY_SID",
+            "$XRAY_SID2",
+            "$XRAY_SID3"
           ]
         }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ],
+        "routeOnly": true
+      }
+    },
+    {
+      "tag": "VLESS TCP VISION REALITY",
+      "listen": "0.0.0.0",
+      "port": $VISION_PORT,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "$XRAY_UUID",
+            "email": "default",
+            "flow": "xtls-rprx-vision"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "xver": 1,
+          "target": "127.0.0.1:4123",
+          "serverNames": [
+            "$VLESS_DOMAIN"
+          ],
+          "privateKey": "$XRAY_PIK",
+          "publicKey": "$XRAY_PBK",
+          "shortIds": [
+            "$XRAY_SID",
+            "$XRAY_SID2",
+            "$XRAY_SID3"
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ],
+        "routeOnly": true
       }
     }
   ],
@@ -43,8 +99,10 @@
     {
       "protocol": "freedom",
       "tag": "direct",
-      "settings": {
-        "domainStrategy": "UseIPv4"
+      "streamSettings": {
+        "sockopt": {
+          "domainStrategy": "UseIPv4"
+        }
       }
     },
     {
@@ -53,13 +111,19 @@
     }
   ],
   "routing": {
+    "domainStrategy": "IPIfNonMatch",
     "rules": [
       {
         "protocol": "bittorrent",
         "outboundTag": "block"
+      },
+      {
+        "ip": [
+          "geoip:private"
+        ],
+        "outboundTag": "block"
       }
-    ],
-    "domainStrategy": "IPIfNonMatch"
+    ]
   },
   "dns": {
     "servers": [

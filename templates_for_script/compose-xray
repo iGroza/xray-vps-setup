@@ -12,6 +12,8 @@ services:
     image: ghcr.io/xtls/xray-core:$XRAY_VERSION
     container_name: xray
     restart: always
+    depends_on:
+      - angie
     network_mode: host
     user: root
     volumes:

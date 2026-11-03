@@ -5,7 +5,7 @@ UVICORN_PORT = 8000
 # UVICORN_UDS = "/var/lib/marzban/marzban.socket"
 DASHBOARD_PATH = "/$MARZBAN_PATH/"
 XRAY_JSON = "xray_config.json"
-XRAY_SUBSCRIPTION_URL_PREFIX = "https://$VLESS_DOMAIN:$XRAY_PORT"
+XRAY_SUBSCRIPTION_URL_PREFIX = "https://$VLESS_DOMAIN$XRAY_PORT_SUFFIX"
 XRAY_SUBSCRIPTION_PATH = "$MARZBAN_SUB_PATH"
 SQLALCHEMY_DATABASE_URL = "sqlite:////var/lib/marzban/db.sqlite3"
 # ALLOWED_ORIGINS=http://localhost,http://localhost:8000,http://example.com
@@ -17,7 +17,7 @@ XRAY_EXECUTABLE_PATH = "/code/xray-core/xray"
 TELEGRAM_API_TOKEN = "$TELEGRAM_API_TOKEN"
 TELEGRAM_ADMIN_ID = "$TELEGRAM_ADMIN_ID"
 # TELEGRAM_LOGGER_CHANNEL_ID = -1234567890123
-# TELEGRAM_DEFAULT_VLESS_FLOW = "xtls-rprx-vision"  # not used: gRPC transport has no flow
+TELEGRAM_DEFAULT_VLESS_FLOW = "xtls-rprx-vision"
 # TELEGRAM_PROXY_URL = "http://localhost:8080"
 
 # DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/xxxxxxx"
