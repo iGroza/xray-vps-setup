@@ -2,4 +2,5 @@ gist*.md
 ansible.cfg
 inventory.yml
 playbook.yml
-.DS_Storeresearch_notes/
+.DS_Store
+research_notes/
