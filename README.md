@@ -12,7 +12,6 @@ Fork includes:
 - Marzban in "Telegram bot only" mode: only the subscription path is public, dashboard/API stay on `127.0.0.1:8000` (SSH tunnel), `SUDO_*` removed from `.env` after the admin is imported
 - Telegram bot labels every link (remark, transport, port) in the Links message and QR captions: a patched `admin.py` is mounted over the one in the pinned v0.8.4 image (`templates_for_script/marzban_bot_patch.py`)
 - Default client config name: `🏴‍☠️ <domain> | <marzban username>` (XHTTP) / `🏴‍☠️ <domain> ⚡ | <marzban username>` (Vision)
-- Research behind these choices: `reports/Xray VLESS обход блокировок РФ.md`
 - Tested on [cherryservers.com](https://www.cherryservers.com/pricing/virtual-servers) (Ubuntu 22.04)
 
 ---
